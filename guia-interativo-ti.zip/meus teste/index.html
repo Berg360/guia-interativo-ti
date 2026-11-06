@@ -1,0 +1,1127 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#0b1220">
+<title>TechPath Academy | Formação em Tecnologia</title>
+
+<style>
+:root{
+  --bg:#0b1220;
+  --panel:#111c2e;
+  --panel2:#17253a;
+  --line:#293951;
+  --text:#edf4ff;
+  --muted:#a4b4cb;
+  --accent:#66e0b0;
+  --blue:#78a9ff;
+  --danger:#ff8383;
+  --radius:16px;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;background:var(--bg);color:var(--text);
+  font:15px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+a{color:var(--accent);text-decoration:none}
+button:focus-visible,a:focus-visible,input:focus-visible,
+select:focus-visible,textarea:focus-visible{
+  outline:2px solid var(--accent);outline-offset:3px
+}
+.topbar{
+  position:sticky;top:0;z-index:10;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:18px;padding:14px 5%;
+  background:#0b1220ee;backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--line)
+}
+.brand{font-size:20px;font-weight:850;letter-spacing:-.5px}
+.brand span{color:var(--accent)}
+.nav{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;
+  gap:8px;padding:10px 15px;border-radius:9px;
+  border:1px solid var(--line);background:var(--panel2);
+  color:var(--text);font-weight:650
+}
+.btn:hover{filter:brightness(1.15)}
+.btn.primary{background:var(--accent);color:#09271d;border-color:var(--accent)}
+.btn.ghost{background:transparent}
+.btn.danger{color:var(--danger)}
+.btn.small{padding:6px 10px;font-size:13px}
+.container{width:min(1180px,92%);margin:0 auto}
+main{min-height:75vh;padding:32px 0 60px}
+.hero{
+  padding:50px 0 42px;display:grid;
+  grid-template-columns:1.3fr .7fr;gap:35px;align-items:center
+}
+.eyebrow{
+  display:inline-block;color:var(--accent);font-size:12px;
+  letter-spacing:1.8px;font-weight:850;text-transform:uppercase
+}
+h1{font-size:clamp(34px,5vw,62px);line-height:1.08;letter-spacing:-2px;margin:15px 0}
+h2{font-size:25px;letter-spacing:-.6px;margin:0 0 12px}
+h3{font-size:18px;margin:8px 0}
+p{color:var(--muted)}
+.hero p{font-size:17px;max-width:640px}
+.hero-art{
+  border:1px solid var(--line);border-radius:24px;padding:25px;
+  background:radial-gradient(circle at top right,#204e4c,transparent 55%),var(--panel);
+  min-height:270px;display:flex;flex-direction:column;justify-content:center
+}
+.code-window{background:#09101c;border:1px solid var(--line);border-radius:12px;padding:20px}
+.code-line{font-family:Consolas,monospace;color:var(--muted);margin:7px 0}
+.green{color:var(--accent)}.blue{color:var(--blue)}
+.section{margin-top:38px}
+.section-head{display:flex;justify-content:space-between;align-items:end;gap:15px;margin-bottom:18px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{
+  background:var(--panel);border:1px solid var(--line);
+  border-radius:var(--radius);padding:22px;min-width:0
+}
+.card p{margin:8px 0 18px}
+.card .bottom{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:18px}
+.iconbox{
+  width:46px;height:46px;display:grid;place-items:center;
+  background:#1e3b3c;border:1px solid #2a5a51;border-radius:12px;
+  font-size:23px;margin-bottom:15px
+}
+.tag{
+  display:inline-block;font-size:11px;letter-spacing:.3px;
+  border:1px solid var(--line);border-radius:30px;
+  color:var(--muted);padding:4px 9px
+}
+.tag.free{color:var(--accent);border-color:#28604e}
+.muted{color:var(--muted)}
+.smalltext{font-size:13px}
+.progress{height:7px;background:#26364c;border-radius:9px;overflow:hidden;margin:10px 0}
+.progress>div{height:100%;background:var(--accent);transition:width .3s}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:25px 0}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:17px}
+.stat strong{font-size:25px;display:block}
+.stat span{font-size:12px;color:var(--muted)}
+.form-card{max-width:560px;margin:20px auto}
+label{display:block;font-weight:650;margin:12px 0 5px}
+input,select,textarea{
+  width:100%;padding:12px;background:#091321;
+  color:var(--text);border:1px solid var(--line);
+  border-radius:9px
+}
+textarea{min-height:100px;resize:vertical}
+form .btn{margin-top:15px}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.row>*{flex:1}
+.notice{padding:13px;border:1px solid var(--line);border-radius:10px;margin:14px 0}
+.notice.success{border-color:#28604e;color:var(--accent)}
+.notice.error{border-color:#704040;color:var(--danger)}
+.lesson-layout{display:grid;grid-template-columns:270px 1fr;gap:20px}
+.lesson-list button{
+  display:block;width:100%;text-align:left;margin:6px 0;
+  background:transparent;border:1px solid transparent;
+  border-radius:9px;padding:10px;color:var(--muted)
+}
+.lesson-list button.active{background:var(--panel2);border-color:var(--line);color:var(--text)}
+.lesson-content{min-height:350px}
+.lesson-content pre{
+  white-space:pre-wrap;background:#07101c;border:1px solid var(--line);
+  border-radius:10px;padding:15px;overflow:auto;color:var(--accent)
+}
+.quiz-option{
+  display:block;width:100%;text-align:left;padding:12px;
+  margin:8px 0;background:#0b1626;color:var(--text);
+  border:1px solid var(--line);border-radius:9px
+}
+.quiz-option:hover{border-color:var(--accent)}
+.quiz-option:disabled{cursor:default}
+footer{border-top:1px solid var(--line);padding:30px 0;text-align:center;color:var(--muted)}
+.hidden{display:none!important}
+hr{border:0;border-top:1px solid var(--line);margin:20px 0}
+@media(max-width:850px){
+  .hero{grid-template-columns:1fr;padding-top:25px}
+  .grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .lesson-layout{grid-template-columns:1fr}
+  .lesson-list{display:grid;grid-template-columns:repeat(2,1fr);gap:5px}
+}
+@media(max-width:560px){
+  .topbar{padding:12px 4%;align-items:flex-start}
+  .nav{justify-content:flex-end}
+  .nav .btn{padding:7px 9px;font-size:12px}
+  .brand{font-size:17px}
+  .grid,.grid.two{grid-template-columns:1fr}
+  .stats{grid-template-columns:1fr}
+  h1{letter-spacing:-1px}
+  .section-head{align-items:flex-start;flex-direction:column}
+}
+</style>
+</head>
+
+<body>
+<header class="topbar">
+  <a href="#home" class="brand">TechPath<span> Academy</span></a>
+  <nav class="nav" id="navigation"></nav>
+</header>
+
+<main class="container" id="app" aria-live="polite"></main>
+
+<footer>
+  <div class="container">
+    <strong>TechPath Academy</strong>
+    <p>Conhecimento, prática e autonomia profissional.</p>
+    <span class="smalltext">Plataforma educacional gratuita · Versão local demonstrativa</span>
+  </div>
+</footer>
+
+<script>
+"use strict";
+
+/*
+ * TECHPATH ACADEMY — MVP EM ARQUIVO ÚNICO
+ * Os dados ficam neste navegador.
+ * Não é um sistema multiusuário seguro para publicação.
+ */
+
+const DB = {
+  users: "tpa_users_v1",
+  current: "tpa_current_v1",
+  courses: "tpa_courses_v1",
+  progress: "tpa_progress_v1",
+  projects: "tpa_projects_v1"
+};
+
+const $ = (selector) => document.querySelector(selector);
+const app = $("#app");
+
+function read(key, fallback) {
+  try {
+    const value = localStorage.getItem(key);
+    return value === null ? fallback : JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function write(key, value) {
+  localStorage.setItem(key, JSON.stringify(value));
+}
+
+function id() {
+  return crypto.randomUUID
+    ? crypto.randomUUID()
+    : Date.now().toString(36) + Math.random().toString(36).slice(2);
+}
+
+function escapeHTML(value) {
+  return String(value ?? "").replace(/[&<>"']/g, ch => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;",
+    '"':"&quot;", "'":"&#39;"
+  })[ch]);
+}
+
+function currentUser() {
+  const userId = read(DB.current, null);
+  return read(DB.users, []).find(user => user.id === userId) || null;
+}
+
+function courses() {
+  return read(DB.courses, []);
+}
+
+function progressData() {
+  return read(DB.progress, {});
+}
+
+function progressKey(userId, courseId) {
+  return userId + ":" + courseId;
+}
+
+function userProgress(user, course) {
+  if (!user) return { lessons: [], score: 0, completed: false };
+  return progressData()[progressKey(user.id, course.id)] ||
+    { lessons: [], score: 0, completed: false };
+}
+
+function saveProgress(user, course, data) {
+  const all = progressData();
+  all[progressKey(user.id, course.id)] = data;
+  write(DB.progress, all);
+}
+
+function seedCourses() {
+  if (localStorage.getItem(DB.courses)) return;
+
+  write(DB.courses, [
+    {
+      id:"logic",
+      title:"Lógica de Programação",
+      category:"Fundamentos",
+      level:"Iniciante",
+      hours:12,
+      description:"Aprenda algoritmos, condições, variáveis e repetições.",
+      lessons:[
+        {
+          title:"O que é programação?",
+          content:"Programar é descrever instruções para resolver problemas. Um bom programa recebe dados, processa informações e produz resultados.",
+          code:"entrada = 10\\nresultado = entrada * 2\\nprint(resultado)",
+          question:"Qual é o primeiro passo para resolver um problema de programação?",
+          options:["Escrever código sem planejar","Compreender o problema e os dados","Instalar todas as linguagens"],
+          answer:1,
+          explanation:"Entender o problema permite definir entradas, regras e resultado esperado."
+        },
+        {
+          title:"Variáveis e dados",
+          content:"Uma variável representa um valor que pode ser utilizado durante a execução de um programa.",
+          code:"nome = 'Ana'\\nidade = 20\\nprint(nome, idade)",
+          question:"Para que serve uma variável?",
+          options:["Guardar ou referenciar um valor","Desligar o computador","Substituir todos os algoritmos"],
+          answer:0,
+          explanation:"Variáveis permitem armazenar e reutilizar informações."
+        },
+        {
+          title:"Condições",
+          content:"Condições permitem executar ações diferentes dependendo de uma expressão verdadeira ou falsa.",
+          code:"idade = 20\\nif idade >= 18:\\n    print('Maior de idade')",
+          question:"Qual estrutura permite escolher entre caminhos?",
+          options:["Uma variável","Uma condição if/else","Um comentário"],
+          answer:1,
+          explanation:"A estrutura condicional toma decisões com base em uma condição."
+        },
+        {
+          title:"Repetições",
+          content:"Laços de repetição executam instruções várias vezes, normalmente até que uma condição seja satisfeita.",
+          code:"for numero in range(5):\\n    print(numero)",
+          question:"Qual estrutura repete um bloco de instruções?",
+          options:["loop ou laço","comentário","importação"],
+          answer:0,
+          explanation:"Laços como for e while permitem repetir instruções."
+        }
+      ]
+    },
+    {
+      id:"python",
+      title:"Python do Básico ao Avançado",
+      category:"Programação",
+      level:"Iniciante → Avançado",
+      hours:40,
+      description:"Construa uma base em Python e evolua até aplicações práticas.",
+      lessons:[
+        {
+          title:"Primeiro programa",
+          content:"Python é uma linguagem utilizada em automação, desenvolvimento web, dados e inteligência artificial.",
+          code:"print('Olá, mundo!')",
+          question:"Qual é a função de print()?",
+          options:["Exibir informação","Criar uma senha","Apagar arquivos"],
+          answer:0,
+          explanation:"print() apresenta valores na saída do programa."
+        },
+        {
+          title:"Tipos de dados",
+          content:"Os tipos básicos incluem int para inteiros, float para números decimais, str para textos e bool para valores lógicos.",
+          code:"nome = 'João'\\nidade = 25\\naltura = 1.80\\nativo = True",
+          question:"Qual tipo representa um texto em Python?",
+          options:["int","str","bool"],
+          answer:1,
+          explanation:"str é o tipo utilizado para representar strings, ou textos."
+        },
+        {
+          title:"Funções",
+          content:"Funções organizam tarefas em blocos reutilizáveis. Podem receber parâmetros e devolver resultados.",
+          code:"def somar(a, b):\\n    return a + b\\n\\nprint(somar(3, 4))",
+          question:"O que return faz em uma função?",
+          options:["Devolve um resultado","Cria um arquivo HTML","Repete automaticamente a função"],
+          answer:0,
+          explanation:"return devolve o valor produzido pela função ao ponto de chamada."
+        },
+        {
+          title:"Projeto: calculadora",
+          content:"Projeto inicial: crie uma calculadora que receba dois números, permita escolher uma operação e trate divisões por zero.",
+          code:"def somar(a, b):\\n    return a + b\\n\\nprint(somar(10, 5))",
+          question:"Qual prática melhora a confiabilidade do projeto?",
+          options:["Testar diferentes entradas","Ignorar erros","Remover todas as validações"],
+          answer:0,
+          explanation:"Testar entradas válidas e inválidas ajuda a identificar problemas."
+        }
+      ]
+    },
+    {
+      id:"web",
+      title:"Desenvolvimento Web",
+      category:"Desenvolvimento",
+      level:"Iniciante",
+      hours:30,
+      description:"Aprenda a estruturar páginas, estilizar interfaces e adicionar interatividade.",
+      lessons:[
+        {
+          title:"Estrutura HTML",
+          content:"HTML organiza o conteúdo de uma página com elementos semânticos, como header, main, section e footer.",
+          code:"<main>\\n  <h1>Meu projeto</h1>\\n  <p>Minha primeira página.</p>\\n</main>",
+          question:"Qual tecnologia estrutura o conteúdo da página?",
+          options:["HTML","CSS","SQL"],
+          answer:0,
+          explanation:"HTML define a estrutura e o significado do conteúdo."
+        },
+        {
+          title:"Estilos com CSS",
+          content:"CSS controla cores, espaçamentos, tipografia, disposição dos elementos e adaptação a diferentes telas.",
+          code:"h1 {\\n  color: seagreen;\\n  font-size: 2rem;\\n}",
+          question:"Qual tecnologia estiliza uma página?",
+          options:["Python","CSS","SQLite"],
+          answer:1,
+          explanation:"CSS é responsável pela apresentação visual da página."
+        },
+        {
+          title:"Interatividade",
+          content:"JavaScript responde a eventos, atualiza a interface e permite criar aplicações interativas.",
+          code:"document.querySelector('button')\\n  .addEventListener('click', () => {\\n    alert('Olá!');\\n  });",
+          question:"Qual tecnologia executa essa interação no navegador?",
+          options:["JavaScript","HTML sozinho","SQL"],
+          answer:0,
+          explanation:"JavaScript pode responder a eventos e modificar a página."
+        }
+      ]
+    },
+    {
+      id:"data",
+      title:"Banco de Dados e SQL",
+      category:"Dados",
+      level:"Intermediário",
+      hours:24,
+      description:"Entenda tabelas, consultas, relacionamentos e persistência de dados.",
+      lessons:[
+        {
+          title:"O que é um banco de dados?",
+          content:"Bancos de dados organizam informações para consulta, atualização e análise.",
+          code:"SELECT nome, email\\nFROM usuarios;",
+          question:"Qual comando SQL consulta dados?",
+          options:["SELECT","PAINT","REPEAT"],
+          answer:0,
+          explanation:"SELECT seleciona dados de uma ou mais tabelas."
+        },
+        {
+          title:"Filtrando registros",
+          content:"A cláusula WHERE filtra os registros que atendem a uma condição.",
+          code:"SELECT nome\\nFROM usuarios\\nWHERE ativo = 1;",
+          question:"Para que serve WHERE?",
+          options:["Filtrar registros","Criar cores","Formatar HTML"],
+          answer:0,
+          explanation:"WHERE restringe o resultado de acordo com uma condição."
+        }
+      ]
+    },
+    {
+      id:"ai",
+      title:"Inteligência Artificial Aplicada",
+      category:"Inteligência Artificial",
+      level:"Intermediário",
+      hours:32,
+      description:"Conheça modelos, prompts, avaliação de resultados e aplicações de IA.",
+      lessons:[
+        {
+          title:"Fundamentos de IA",
+          content:"Inteligência artificial é um campo que desenvolve sistemas capazes de executar tarefas como classificação, previsão e geração de conteúdo.",
+          code:"problema → dados → modelo → avaliação",
+          question:"Por que devemos avaliar os resultados de um modelo?",
+          options:["Porque modelos podem errar","Porque todo resultado é sempre correto","Para eliminar todos os testes"],
+          answer:0,
+          explanation:"Modelos podem produzir erros, vieses ou resultados inadequados."
+        },
+        {
+          title:"Projetando uma solução",
+          content:"Um projeto de IA deve começar com um problema definido, critérios de qualidade, dados apropriados e avaliação de riscos.",
+          code:"Problema → Protótipo → Testes → Avaliação",
+          question:"Qual é um bom primeiro passo?",
+          options:["Escolher o modelo mais caro","Definir o problema e os critérios de sucesso","Publicar sem testar"],
+          answer:1,
+          explanation:"Definir o problema orienta a escolha da abordagem e a avaliação."
+        }
+      ]
+    },
+    {
+      id:"project",
+      title:"Projeto Profissional Final",
+      category:"Portfólio",
+      level:"Avançado",
+      hours:20,
+      description:"Planeje, construa, teste e documente uma aplicação completa.",
+      lessons:[
+        {
+          title:"Planejamento do projeto",
+          content:"Defina o usuário, o problema, as funcionalidades essenciais, os critérios de aceitação e as limitações.",
+          code:"Problema → Requisitos → Arquitetura → Implementação → Testes",
+          question:"O que ajuda a verificar se o projeto atende ao objetivo?",
+          options:["Critérios de aceitação","Somente a aparência","Quantidade de arquivos"],
+          answer:0,
+          explanation:"Critérios de aceitação definem resultados verificáveis."
+        },
+        {
+          title:"Qualidade e entrega",
+          content:"Um projeto profissional deve ter instruções de instalação, documentação, testes e descrição clara das limitações.",
+          code:"README + testes + código + demonstração",
+          question:"Qual item facilita a manutenção por outra pessoa?",
+          options:["Código sem explicação","Documentação e testes","Senhas dentro do código"],
+          answer:1,
+          explanation:"Documentação e testes facilitam compreensão e manutenção."
+        }
+      ]
+    }
+  ]);
+}
+
+seedCourses();
+
+function notify(message, type="success") {
+  const box = $("#notice");
+  if (!box) {
+    alert(message);
+    return;
+  }
+  box.className = "notice " + type;
+  box.textContent = message;
+  box.scrollIntoView({behavior:"smooth", block:"nearest"});
+}
+
+function route() {
+  const hash = location.hash.slice(1) || "home";
+  const parts = hash.split("/");
+  const user = currentUser();
+
+  if (parts[0] === "logout") {
+    write(DB.current, null);
+    location.hash = "home";
+    renderHome();
+    return;
+  }
+
+  const routes = {
+    home: renderHome,
+    courses: renderCourses,
+    login: renderLogin,
+    register: renderRegister,
+    dashboard: renderDashboard,
+    lesson: () => renderLesson(parts[1], Number(parts[2] || 0)),
+    projects: renderProjects,
+    admin: renderAdmin,
+    profile: renderProfile
+  };
+
+  if (["dashboard","lesson","projects","profile"].includes(parts[0]) && !user) {
+    location.hash = "login";
+    return;
+  }
+
+  if (parts[0] === "admin" && !user) {
+    location.hash = "login";
+    return;
+  }
+
+  (routes[parts[0]] || renderHome)();
+  renderNav();
+}
+
+function renderNav() {
+  const user = currentUser();
+  let nav = `
+    <a class="btn ghost" href="#courses">Cursos</a>
+  `;
+
+  if (user) {
+    nav += `
+      <a class="btn ghost" href="#dashboard">Minha área</a>
+      <a class="btn ghost" href="#projects">Projetos</a>
+    `;
+    if (user.role === "admin") {
+      nav += `<a class="btn ghost" href="#admin">Admin</a>`;
+    }
+    nav += `<a class="btn" href="#logout">Sair</a>`;
+  } else {
+    nav += `
+      <a class="btn ghost" href="#login">Entrar</a>
+      <a class="btn primary" href="#register">Criar conta grátis</a>
+    `;
+  }
+  $("#navigation").innerHTML = nav;
+}
+
+function renderHome() {
+  const user = currentUser();
+  const all = courses();
+  const featured = all.slice(0,3);
+
+  app.innerHTML = `
+    <section class="hero">
+      <div>
+        <span class="eyebrow">Formação tecnológica gratuita</span>
+        <h1>Aprenda tecnologia.<br><span class="green">Construa o futuro.</span></h1>
+        <p>Desenvolva competências reais em programação, web, dados e inteligência artificial. Aprenda no seu ritmo e transforme conhecimento em projetos.</p>
+        <div class="row" style="margin-top:25px">
+          <a class="btn primary" href="${user ? "#courses" : "#register"}">Começar gratuitamente →</a>
+          <a class="btn ghost" href="#courses">Explorar trilhas</a>
+        </div>
+        <p class="smalltext">Sem assinatura. Sem planos pagos. Aprendizagem prática.</p>
+      </div>
+      <div class="hero-art">
+        <span class="eyebrow">Aprendizagem por competências</span>
+        <div class="code-window">
+          <div class="code-line"><span class="blue">def</span> <span class="green">construir_projeto</span>():</div>
+          <div class="code-line">&nbsp;&nbsp;estudar()</div>
+          <div class="code-line">&nbsp;&nbsp;praticar()</div>
+          <div class="code-line">&nbsp;&nbsp;testar()</div>
+          <div class="code-line">&nbsp;&nbsp;<span class="blue">return</span> autonomia</div>
+        </div>
+        <p>Conhecimento → prática → projeto → portfólio</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div><span class="eyebrow">Sua jornada</span><h2>Aprender construindo</h2></div>
+      </div>
+      <div class="grid">
+        <article class="card"><div class="iconbox">01</div><h3>Fundamentos</h3><p>Aprenda conceitos, lógica e ferramentas essenciais com orientação passo a passo.</p></article>
+        <article class="card"><div class="iconbox">02</div><h3>Prática orientada</h3><p>Resolva desafios, compreenda erros e desenvolva habilidades progressivamente.</p></article>
+        <article class="card"><div class="iconbox">03</div><h3>Projetos reais</h3><p>Construa aplicações, registre seus projetos e desenvolva autonomia profissional.</p></article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="section-head">
+        <div><span class="eyebrow">Catálogo</span><h2>Comece pela sua trilha</h2></div>
+        <a href="#courses">Ver todos os cursos →</a>
+      </div>
+      <div class="grid">${featured.map(courseCard).join("")}</div>
+    </section>
+
+    <section class="section card">
+      <span class="eyebrow">Uma plataforma para todos os níveis</span>
+      <h2>O conteúdo acompanha seu desenvolvimento</h2>
+      <p>A idade ajuda a adaptar exemplos e linguagem. A evolução técnica depende das competências demonstradas, não de uma restrição etária.</p>
+      <a class="btn primary" href="${user ? "#dashboard" : "#register"}">Iniciar minha jornada</a>
+    </section>
+  `;
+}
+
+function courseCard(course) {
+  return `
+    <article class="card">
+      <div class="row">
+        <span class="tag">${escapeHTML(course.category)}</span>
+        <span class="tag free">GRÁTIS</span>
+      </div>
+      <div class="iconbox" style="margin-top:15px">⌘</div>
+      <h3>${escapeHTML(course.title)}</h3>
+      <p>${escapeHTML(course.description)}</p>
+      <div class="bottom">
+        <span class="smalltext muted">${escapeHTML(course.level)} · ${course.hours}h</span>
+        <a class="btn small primary" href="#lesson/${encodeURIComponent(course.id)}/0">Estudar →</a>
+      </div>
+    </article>
+  `;
+}
+
+function renderCourses() {
+  app.innerHTML = `
+    <span class="eyebrow">Catálogo aberto</span>
+    <h1>Trilhas de aprendizagem</h1>
+    <p>Todos os cursos disponíveis nesta versão são gratuitos.</p>
+    <div class="row" style="margin:22px 0">
+      <input id="searchCourses" placeholder="Buscar por curso, área ou tecnologia..." aria-label="Buscar cursos">
+      <select id="filterLevel" aria-label="Filtrar por nível">
+        <option value="">Todos os níveis</option>
+        <option>Iniciante</option>
+        <option>Intermediário</option>
+        <option>Avançado</option>
+      </select>
+    </div>
+    <div id="courseGrid" class="grid"></div>
+  `;
+
+  function update() {
+    const term = $("#searchCourses").value.toLowerCase();
+    const level = $("#filterLevel").value;
+    const found = courses().filter(c => {
+      const match = (c.title+" "+c.category+" "+c.description+" "+c.level).toLowerCase().includes(term);
+      const levelMatch = !level || c.level.includes(level);
+      return c.published !== false && match && levelMatch;
+    });
+    $("#courseGrid").innerHTML = found.length
+      ? found.map(courseCard).join("")
+      : '<p>Nenhum curso encontrado para esses filtros.</p>';
+  }
+
+  $("#searchCourses").addEventListener("input", update);
+  $("#filterLevel").addEventListener("change", update);
+  update();
+}
+
+async function passwordHash(password) {
+  if (!window.crypto?.subtle) {
+    throw new Error("Abra o site em localhost para usar o cadastro. A criptografia do navegador não está disponível neste contexto.");
+  }
+  const bytes = new TextEncoder().encode(password);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest))
+    .map(b => b.toString(16).padStart(2,"0")).join("");
+}
+
+function renderRegister() {
+  app.innerHTML = `
+    <section class="card form-card">
+      <span class="eyebrow">Cadastro gratuito</span>
+      <h1 style="font-size:35px">Crie sua conta</h1>
+      <p>Salve cursos, acompanhe sua evolução e registre seus projetos neste navegador.</p>
+      <div id="notice" class="hidden"></div>
+      <form id="registerForm">
+        <label for="regName">Nome</label>
+        <input id="regName" required maxlength="80" autocomplete="name">
+        <label for="regEmail">E-mail</label>
+        <input id="regEmail" type="email" required maxlength="254" autocomplete="email">
+        <label for="regAge">Idade</label>
+        <input id="regAge" type="number" min="13" max="120" required>
+        <label for="regGoal">O que deseja aprender?</label>
+        <select id="regGoal">
+          <option>Programação</option><option>Desenvolvimento web</option>
+          <option>Dados</option><option>Inteligência Artificial</option>
+          <option>Preparação profissional</option>
+        </select>
+        <label for="regPassword">Senha (mínimo 12 caracteres)</label>
+        <input id="regPassword" type="password" minlength="12" maxlength="128" required autocomplete="new-password">
+        <button class="btn primary" type="submit">Criar conta gratuita</button>
+      </form>
+      <p class="smalltext">Este protótipo armazena os dados somente neste navegador. Não use uma senha que já utiliza em outros serviços.</p>
+      <p>Já tem uma conta? <a href="#login">Entrar</a></p>
+    </section>
+  `;
+
+  $("#registerForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const name = $("#regName").value.trim();
+    const email = $("#regEmail").value.trim().toLowerCase();
+    const age = Number($("#regAge").value);
+    const password = $("#regPassword").value;
+
+    if (name.length < 2 || age < 13 || age > 120 || password.length < 12) {
+      notify("Verifique o nome, a idade e a senha.", "error");
+      return;
+    }
+
+    const users = read(DB.users, []);
+    if (users.some(u => u.email === email)) {
+      notify("Este e-mail já está cadastrado neste navegador.", "error");
+      return;
+    }
+
+    try {
+      const user = {
+        id:id(), name, email, age, goal:$("#regGoal").value,
+        passwordHash:await passwordHash(password),
+        role:"student", createdAt:new Date().toISOString()
+      };
+      users.push(user);
+      write(DB.users, users);
+      write(DB.current, user.id);
+      location.hash = "dashboard";
+    } catch (error) {
+      notify(error.message || "Não foi possível criar a conta.", "error");
+    }
+  });
+}
+
+function renderLogin() {
+  app.innerHTML = `
+    <section class="card form-card">
+      <span class="eyebrow">Área do membro</span>
+      <h1 style="font-size:35px">Bem-vindo de volta</h1>
+      <p>Entre com a conta criada neste navegador.</p>
+      <div id="notice" class="hidden"></div>
+      <form id="loginForm">
+        <label for="loginEmail">E-mail</label>
+        <input id="loginEmail" type="email" required autocomplete="email">
+        <label for="loginPassword">Senha</label>
+        <input id="loginPassword" type="password" required autocomplete="current-password">
+        <button class="btn primary" type="submit">Entrar</button>
+      </form>
+      <p>Não possui conta? <a href="#register">Criar conta gratuita</a></p>
+    </section>
+  `;
+
+  $("#loginForm").addEventListener("submit", async event => {
+    event.preventDefault();
+    const email = $("#loginEmail").value.trim().toLowerCase();
+    const password = $("#loginPassword").value;
+    try {
+      const hash = await passwordHash(password);
+      const user = read(DB.users, []).find(
+        u => u.email === email && u.passwordHash === hash
+      );
+      if (!user) return notify("E-mail ou senha inválidos.", "error");
+      write(DB.current, user.id);
+      location.hash = "dashboard";
+    } catch (error) {
+      notify(error.message || "Não foi possível entrar.", "error");
+    }
+  });
+}
+
+function renderDashboard() {
+  const user = currentUser();
+  if (!user) return;
+
+  const all = courses().filter(c => c.published !== false);
+  const records = all.map(c => ({course:c, data:userProgress(user,c)}));
+  const completed = records.filter(r => r.data.completed).length;
+  const started = records.filter(r => r.data.lessons.length > 0 && !r.data.completed).length;
+  const totalLessons = records.reduce((sum,r) => sum+r.course.lessons.length,0);
+  const doneLessons = records.reduce((sum,r) => sum+r.data.lessons.length,0);
+  const percentage = totalLessons ? Math.round(doneLessons/totalLessons*100) : 0;
+
+  app.innerHTML = `
+    <span class="eyebrow">Área do membro</span>
+    <h1 style="font-size:38px">Olá, ${escapeHTML(user.name)}.</h1>
+    <p>Continue aprendendo e transformando conhecimento em prática.</p>
+    <div class="stats">
+      <div class="stat"><strong>${completed}</strong><span>Cursos concluídos</span></div>
+      <div class="stat"><strong>${started}</strong><span>Cursos em andamento</span></div>
+      <div class="stat"><strong>${percentage}%</strong><span>Progresso geral por aulas</span></div>
+    </div>
+    <section class="card">
+      <span class="eyebrow">Seu perfil</span>
+      <h2>${escapeHTML(user.goal || "Sua jornada de aprendizagem")}</h2>
+      <p>Idade: ${user.age} · Perfil de aprendizagem adaptativo</p>
+      <p>${escapeHTML(adaptiveMessage(user))}</p>
+      <a href="#profile" class="btn">Editar preferências</a>
+    </section>
+    <section class="section">
+      <div class="section-head"><h2>Continue seus estudos</h2><a href="#courses">Explorar cursos →</a></div>
+      <div class="grid">${records.map(({course,data}) => {
+        const count = data.lessons.length;
+        const pct = course.lessons.length ? Math.round(count/course.lessons.length*100) : 0;
+        return `
+          <article class="card">
+            <span class="tag">${escapeHTML(course.level)}</span>
+            <h3>${escapeHTML(course.title)}</h3>
+            <p>${escapeHTML(course.description)}</p>
+            <div class="progress"><div style="width:${pct}%"></div></div>
+            <p class="smalltext">${count}/${course.lessons.length} aulas registradas · ${pct}%</p>
+            <a class="btn primary" href="#lesson/${encodeURIComponent(course.id)}/${Math.min(count,course.lessons.length-1)}">Continuar →</a>
+          </article>`;
+      }).join("")}</div>
+    </section>
+  `;
+}
+
+function adaptiveMessage(user) {
+  if (user.age < 16) return "Preferência inicial: exemplos concretos, linguagem direta e desafios graduais.";
+  if (user.age < 18) return "Preferência inicial: desafios práticos, projetos guiados e desenvolvimento de autonomia.";
+  return "Preferência inicial: projetos aplicados, documentação, boas práticas e competências profissionais.";
+}
+
+function renderLesson(courseId, lessonIndex) {
+  const user = currentUser();
+  const course = courses().find(c => c.id === courseId && c.published !== false);
+
+  if (!course) {
+    app.innerHTML = `<h1>Curso não encontrado</h1><a href="#courses">Voltar aos cursos</a>`;
+    return;
+  }
+
+  lessonIndex = Math.max(0, Math.min(lessonIndex, course.lessons.length-1));
+  const lesson = course.lessons[lessonIndex];
+  const data = userProgress(user,course);
+  const done = data.lessons.includes(lessonIndex);
+
+  app.innerHTML = `
+    <p><a href="#courses">← Catálogo</a></p>
+    <span class="eyebrow">${escapeHTML(course.category)} · ${escapeHTML(course.level)}</span>
+    <h1 style="font-size:38px">${escapeHTML(course.title)}</h1>
+    <p>${escapeHTML(course.description)}</p>
+    <div class="lesson-layout section">
+      <aside class="card lesson-list">
+        <h3>Módulos e aulas</h3>
+        ${course.lessons.map((item,index)=>`
+          <button class="${index===lessonIndex?"active":""}" data-lesson="${index}">
+            ${data.lessons.includes(index)?"✓":"○"} ${index+1}. ${escapeHTML(item.title)}
+          </button>`).join("")}
+        <hr>
+        <p class="smalltext">${data.lessons.length} de ${course.lessons.length} aulas concluídas</p>
+      </aside>
+      <section class="card lesson-content">
+        <span class="tag">Aula ${lessonIndex+1} de ${course.lessons.length}</span>
+        <h2>${escapeHTML(lesson.title)}</h2>
+        <p>${escapeHTML(lesson.content)}</p>
+        <h3>Exemplo prático</h3>
+        <pre>${escapeHTML(lesson.code)}</pre>
+        <hr>
+        <h3>Desafio de aprendizagem</h3>
+        <p>${escapeHTML(lesson.question)}</p>
+        <div id="quizOptions">
+          ${lesson.options.map((option,index)=>`
+            <button class="quiz-option" data-answer="${index}">
+              ${String.fromCharCode(65+index)}. ${escapeHTML(option)}
+            </button>`).join("")}
+        </div>
+        <div id="quizFeedback" aria-live="polite"></div>
+        <p class="smalltext">Responda ao desafio para registrar esta aula como concluída.</p>
+      </section>
+    </div>
+  `;
+
+  document.querySelectorAll("[data-lesson]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      location.hash = `lesson/${encodeURIComponent(course.id)}/${button.dataset.lesson}`;
+    });
+  });
+
+  document.querySelectorAll("[data-answer]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      const answer = Number(button.dataset.answer);
+      const feedback = $("#quizFeedback");
+      const correct = answer === lesson.answer;
+
+      document.querySelectorAll("[data-answer]").forEach(b=>b.disabled=true);
+
+      if (correct) {
+        feedback.innerHTML = `<div class="notice success"><strong>Resposta correta!</strong><br>${escapeHTML(lesson.explanation)}</div>`;
+        if (user) {
+          const updated = userProgress(user,course);
+          if (!updated.lessons.includes(lessonIndex)) updated.lessons.push(lessonIndex);
+          updated.score = Math.round(updated.lessons.length/course.lessons.length*100);
+          updated.completed = updated.lessons.length === course.lessons.length;
+          saveProgress(user,course,updated);
+        } else {
+          feedback.innerHTML += `<p><a href="#register">Crie uma conta para salvar seu progresso.</a></p>`;
+        }
+        feedback.innerHTML += lessonIndex < course.lessons.length-1
+          ? `<button class="btn primary" id="nextLesson">Próxima aula →</button>`
+          : `<a class="btn primary" href="${user?"#dashboard":"#register"}">Concluir percurso</a>`;
+        $("#nextLesson")?.addEventListener("click",()=>{
+          location.hash = `lesson/${encodeURIComponent(course.id)}/${lessonIndex+1}`;
+        });
+      } else {
+        feedback.innerHTML = `<div class="notice error"><strong>Ainda não.</strong><br>Revise o conteúdo e tente novamente.</div>
+          <button class="btn" id="tryAgain">Tentar novamente</button>`;
+        $("#tryAgain").addEventListener("click",()=>renderLesson(course.id,lessonIndex));
+      }
+    });
+  });
+}
+
+function renderProjects() {
+  const user = currentUser();
+  if (!user) return;
+
+  const projects = read(DB.projects, []).filter(p=>p.userId===user.id);
+
+  app.innerHTML = `
+    <span class="eyebrow">Portfólio pessoal</span>
+    <h1 style="font-size:38px">Meus projetos</h1>
+    <p>Registre suas ideias e acompanhe a construção do seu portfólio neste navegador.</p>
+    <section class="card">
+      <h2>Novo projeto</h2>
+      <form id="projectForm">
+        <label for="projectTitle">Nome do projeto</label>
+        <input id="projectTitle" required maxlength="120">
+        <label for="projectDesc">Descrição e problema que resolve</label>
+        <textarea id="projectDesc" required maxlength="2000"></textarea>
+        <label for="projectTech">Tecnologias utilizadas</label>
+        <input id="projectTech" placeholder="Python, HTML, CSS..." maxlength="200">
+        <label for="projectStatus">Situação</label>
+        <select id="projectStatus">
+          <option>Planejado</option><option>Em desenvolvimento</option>
+          <option>Concluído</option>
+        </select>
+        <button class="btn primary">Salvar projeto</button>
+      </form>
+    </section>
+    <section class="section"><h2>Projetos registrados</h2>
+      <div class="grid">
+        ${projects.length ? projects.map(p=>`
+          <article class="card">
+            <span class="tag">${escapeHTML(p.status)}</span>
+            <h3>${escapeHTML(p.title)}</h3>
+            <p>${escapeHTML(p.description)}</p>
+            <p class="smalltext">Tecnologias: ${escapeHTML(p.tech || "Não informadas")}</p>
+            <button class="btn small danger" data-delete-project="${p.id}">Excluir</button>
+          </article>`).join("") : "<p>Você ainda não registrou projetos.</p>"}
+      </div>
+    </section>
+  `;
+
+  $("#projectForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const all = read(DB.projects,[]);
+    all.push({
+      id:id(),userId:user.id,
+      title:$("#projectTitle").value.trim(),
+      description:$("#projectDesc").value.trim(),
+      tech:$("#projectTech").value.trim(),
+      status:$("#projectStatus").value,
+      createdAt:new Date().toISOString()
+    });
+    write(DB.projects,all);
+    renderProjects();
+  });
+
+  document.querySelectorAll("[data-delete-project]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      if(!confirm("Excluir este projeto?")) return;
+      write(DB.projects,read(DB.projects,[]).filter(p=>p.id!==button.dataset.deleteProject));
+      renderProjects();
+    });
+  });
+}
+
+function renderProfile() {
+  const user = currentUser();
+  if (!user) return;
+
+  app.innerHTML = `
+    <section class="card form-card">
+      <span class="eyebrow">Seu perfil</span>
+      <h1 style="font-size:35px">Preferências de aprendizagem</h1>
+      <form id="profileForm">
+        <label for="profileName">Nome</label>
+        <input id="profileName" value="${escapeHTML(user.name)}" required maxlength="80">
+        <label for="profileAge">Idade</label>
+        <input id="profileAge" type="number" min="13" max="120" value="${user.age}" required>
+        <label for="profileGoal">Objetivo</label>
+        <select id="profileGoal">
+          ${["Programação","Desenvolvimento web","Dados","Inteligência Artificial","Preparação profissional"].map(g=>
+            `<option ${user.goal===g?"selected":""}>${g}</option>`).join("")}
+        </select>
+        <button class="btn primary">Salvar preferências</button>
+      </form>
+    </section>
+  `;
+
+  $("#profileForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const users=read(DB.users,[]);
+    const index=users.findIndex(u=>u.id===user.id);
+    users[index].name=$("#profileName").value.trim();
+    users[index].age=Number($("#profileAge").value);
+    users[index].goal=$("#profileGoal").value;
+    write(DB.users,users);
+    renderDashboard();
+    renderNav();
+  });
+}
+
+function renderAdmin() {
+  const user=currentUser();
+  if(!user) return;
+
+  /*
+   * ADMINISTRAÇÃO DEMONSTRATIVA:
+   * não há autenticação administrativa segura neste arquivo.
+   * Em produção, o papel admin deve ser definido exclusivamente
+   * pelo backend e protegido por permissões do servidor.
+   */
+  const allCourses=courses();
+  const allUsers=read(DB.users,[]);
+  const allProjects=read(DB.projects,[]);
+
+  app.innerHTML=`
+    <span class="eyebrow">Gestão da plataforma</span>
+    <h1 style="font-size:38px">Área administrativa</h1>
+    <div class="notice error">Modo demonstrativo local. Não utilize para administrar dados reais ou publicar o site.</div>
+    <div class="stats">
+      <div class="stat"><strong>${allUsers.length}</strong><span>Contas neste navegador</span></div>
+      <div class="stat"><strong>${allCourses.length}</strong><span>Cursos cadastrados</span></div>
+      <div class="stat"><strong>${allProjects.length}</strong><span>Projetos locais</span></div>
+    </div>
+    <section class="card">
+      <h2>Cadastrar curso</h2>
+      <form id="adminCourseForm">
+        <label>Título</label><input id="adminTitle" required maxlength="150">
+        <label>Categoria</label><input id="adminCategory" required maxlength="80">
+        <label>Nível</label>
+        <select id="adminLevel"><option>Iniciante</option><option>Intermediário</option><option>Avançado</option></select>
+        <label>Descrição</label><textarea id="adminDescription" required maxlength="1000"></textarea>
+        <button class="btn primary">Cadastrar curso</button>
+      </form>
+      <p class="smalltext">Cursos criados aqui recebem uma aula de demonstração. Você pode editar o conteúdo avançado no código-fonte.</p>
+    </section>
+    <section class="section">
+      <h2>Gerenciar cursos</h2>
+      <div class="grid">
+        ${allCourses.map(c=>`
+          <article class="card">
+            <h3>${escapeHTML(c.title)}</h3>
+            <p>${escapeHTML(c.category)} · ${escapeHTML(c.level)}</p>
+            <button class="btn small" data-toggle-course="${c.id}">
+              ${c.published===false?"Publicar":"Despublicar"}
+            </button>
+            ${!["logic","python","web","data","ai","project"].includes(c.id)
+              ? `<button class="btn small danger" data-remove-course="${c.id}">Excluir</button>`:""}
+          </article>`).join("")}
+      </div>
+    </section>
+    <section class="section card">
+      <h2>Contas locais</h2>
+      <p>Os dados abaixo existem apenas neste navegador.</p>
+      ${allUsers.map(u=>`<p>${escapeHTML(u.name)} · ${escapeHTML(u.email)} · ${u.age} anos</p>`).join("")}
+    </section>
+  `;
+
+  $("#adminCourseForm").addEventListener("submit",event=>{
+    event.preventDefault();
+    const title=$("#adminTitle").value.trim();
+    const category=$("#adminCategory").value.trim();
+    const level=$("#adminLevel").value;
+    const description=$("#adminDescription").value.trim();
+    const newCourse={
+      id:"custom-"+id(),title,category,level,description,hours:5,published:true,
+      lessons:[{
+        title:"Introdução",
+        content:"Estude os fundamentos desta trilha e registre o que aprendeu.",
+        code:"# Seu primeiro exercício",
+        question:"Qual é a melhor maneira de consolidar uma competência?",
+        options:["Praticar e avaliar o resultado","Somente ler o título","Pular os exercícios"],
+        answer:0,
+        explanation:"A prática e a avaliação ajudam a consolidar o conhecimento."
+      }]
+    };
+    const list=courses();
+    list.push(newCourse);
+    write(DB.courses,list);
+    renderAdmin();
+  });
+
+  document.querySelectorAll("[data-toggle-course]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      const list=courses();
+      const course=list.find(c=>c.id===button.dataset.toggleCourse);
+      if(course){
+        course.published=course.published===false;
+        write(DB.courses,list);
+        renderAdmin();
+      }
+    });
+  });
+
+  document.querySelectorAll("[data-remove-course]").forEach(button=>{
+    button.addEventListener("click",()=>{
+      if(!confirm("Excluir este curso local?")) return;
+      write(DB.courses,courses().filter(c=>c.id!==button.dataset.removeCourse));
+      renderAdmin();
+    });
+  });
+}
+
+window.addEventListener("hashchange",route);
+route();
+</script>
+</body>
+</html>
+
+
+
+
+
+
+
+

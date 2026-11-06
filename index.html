@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f6f7fb" />
+    <meta name="description" content="Nexo Cursos: uma plataforma de aprendizagem ativa com disciplinas, mapas interativos e prática guiada." />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="icon" href="/marca.svg" type="image/svg+xml" />
+    <title>Nexo Cursos | Aprendizagem ativa</title>
+    <style>
+      .boot-card { max-width: 520px; margin: 12vh auto; padding: 24px; border: 1px solid #e4e6ef; border-radius: 18px; background: #fff; color: #30334a; font: 15px/1.6 system-ui, sans-serif; box-shadow: 0 14px 38px rgba(28,32,67,.08); }
+      .boot-card h1 { margin: 0 0 8px; font-size: 22px; }
+      .boot-card p { margin: 0; color: #697386; }
+    </style>
+    <script>
+      (() => {
+        const showRecovery = () => {
+          const root = document.getElementById('root');
+          if (!root || !root.querySelector('[data-nexo-boot]')) return;
+          root.innerHTML = '<main class="boot-card"><h1>O Nexo Cursos não iniciou</h1><p>Os arquivos do aplicativo não carregaram. Abra o projeto pelo VS Code, inicie o servidor local e atualize esta janela. Depois de abrir a nova versão conectado ao projeto, o cache offline poderá ser atualizado.</p></main>';
+        };
+        window.addEventListener('error', (event) => {
+          if (event.target instanceof HTMLScriptElement && event.target.type === 'module') showRecovery();
+        }, true);
+        window.setTimeout(showRecovery, 8000);
+      })();
+    </script>
+  </head>
+  <body><div id="root"><main class="boot-card" data-nexo-boot><h1>Carregando Nexo Cursos…</h1><p>Preparando seus cursos e seu progresso.</p></main></div><script type="module" src="/src/main.tsx"></script></body>
+</html>
