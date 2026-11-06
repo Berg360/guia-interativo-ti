@@ -1,0 +1,35 @@
+services:
+  # Servidor do Front-end / API (Node.js)
+  node-app:
+    image: node:20-alpine
+    container_name: site_node_backend
+    working_dir: /app
+    volumes:
+      - .:/app
+    ports:
+      - "3000:3000"
+    command: tail -f /dev/null
+    environment:
+      - NODE_ENV=development
+
+  # Serviço auxiliar em Python (Automações / IA)
+  python-worker:
+    image: python:3.11-slim
+    container_name: site_python_worker
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: python -m http.server 8000
+    ports:
+      - "8000:8000"
+
+  # Serviço de Back-end (Java)
+  java-service:
+    image: eclipse-temurin:17-jdk-alpine
+    container_name: site_java_backend
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: tail -f /dev/null
+    stdin_open: true
+    tty: true
