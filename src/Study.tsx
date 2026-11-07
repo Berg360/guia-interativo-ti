@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import type { Course } from './data/curriculum';
 import { modelAnswers } from './data/answers';
+import { useAuth } from './auth/AuthProvider';
 
 type Rating = 'again' | 'hard' | 'good';
 type ReviewRecord = { repetitions: number; intervalDays: number; dueAt: number; lastReviewedAt: number };
@@ -49,6 +50,7 @@ function buildCards(courses: Course[]): StudyCard[] {
 type StudyProps = { courses: Course[]; initialCourseId?: string; onOpenCourse: (course: Course) => void };
 
 export function Study({ courses, initialCourseId, onOpenCourse }: StudyProps) {
+  const { user, status } = useAuth();
   const [reviews, setReviews] = useState<Record<string, ReviewRecord>>(readReviews);
   const [courseFilter, setCourseFilter] = useState(() => initialCourseId || 'all');
   const [revealed, setRevealed] = useState(false);
@@ -124,7 +126,7 @@ export function Study({ courses, initialCourseId, onOpenCourse }: StudyProps) {
     <div className="study-progress-card">
       <div className="study-progress-heading"><div><strong>Meta de hoje</strong><span>{Math.min(reviewedToday, DAILY_GOAL)} de {DAILY_GOAL} cartões revisados</span></div><b>{progress}%</b></div>
       <div className="study-progress-track"><i style={{ width: progress + '%' }} /></div>
-      <small>Seu progresso fica salvo neste navegador e funciona sem conexão depois que o aplicativo carregar.</small>
+      <small>{user && status === 'synced' ? 'Seu progresso está sincronizado na nuvem e disponível nos seus dispositivos.' : user ? 'Seu progresso será sincronizado assim que a conexão estiver disponível.' : 'Entre com Google para sincronizar entre navegadores; o uso offline permanece disponível neste aparelho.'}</small>
     </div>
     {activeCard ? <article className="flashcard">
       <div className="flashcard-top"><span>RECUPERAÇÃO ATIVA</span><span>{activeCard.course.title}</span></div>

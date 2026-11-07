@@ -1,0 +1,162 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Modelo adotado:
+    // users/{uid}/progress/{progressId}
+    //   key: string obrigatória, 1–200 caracteres; chave de progresso local.
+    //   partCount: int obrigatória, 0–256; 0 somente quando deleted=true.
+    //   updatedAtMs: int obrigatória, 0 até 2100-01-01 em milissegundos;
+    //     relógio do dispositivo, usado apenas como metadado.
+    //   serverUpdatedAt: timestamp obrigatória, gerada pelo servidor e recente.
+    //   schemaVersion: int obrigatória e imutável, atualmente 2.
+    //   deleted: bool obrigatória; tombstone para replicar remoções.
+    // users/{uid}/progress/{progressId}/parts/{partId}
+    //   value: string obrigatória, até 180.000 caracteres; bloco do valor local.
+    // O progressId é gerado no cliente a partir da chave local. Não há campo UID,
+    // e-mail ou perfil no documento: o UID da conta é fixado no próprio caminho.
+
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // A propriedade é definida pelo caminho, não por um campo UID mutável.
+    function uidUnchanged(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function uidNotModified(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function hasRequiredFields(data, fields) {
+      return data.keys().hasAll(fields);
+    }
+
+    function hasOnlyAllowedFields(data, fields) {
+      return data.keys().hasOnly(fields);
+    }
+
+    function isRecent(value) {
+      return value is timestamp
+        && value > request.time - duration.value(5, 'm')
+        && value <= request.time;
+    }
+
+    function isValidProgress(data) {
+      let fields = ['key', 'partCount', 'updatedAtMs', 'serverUpdatedAt', 'schemaVersion', 'deleted'];
+      return hasRequiredFields(data, fields)
+        && hasOnlyAllowedFields(data, fields)
+        && data.key is string
+        && data.key.size() >= 1
+        && data.key.size() <= 200
+        && data.partCount is int
+        && data.partCount >= 0
+        && data.partCount <= 256
+        && data.updatedAtMs is int
+        && data.updatedAtMs >= 0
+        && data.updatedAtMs <= 4102444800000
+        && data.serverUpdatedAt is timestamp
+        && isRecent(data.serverUpdatedAt)
+        && data.schemaVersion is int
+        && data.schemaVersion == 2
+        && data.deleted is bool
+        && data.deleted == (data.partCount == 0);
+    }
+
+    function isValidPartId(partId) {
+      // O cliente usa índices zero-padded de 0000 a 0255.
+      return partId.matches('^0(0[0-9][0-9]|1[0-9][0-9]|2[0-5][0-5])$');
+    }
+
+    function paddedCount(count) {
+      return count < 10 ? '000' + string(count)
+        : count < 100 ? '00' + string(count)
+        : count < 1000 ? '0' + string(count)
+        : string(count);
+    }
+
+    function isPartIndexBelowCount(partId, count) {
+      return count > 0 && partId < paddedCount(count);
+    }
+
+    function parentAfter(userId, progressId) {
+      return /databases/$(database)/documents/users/$(userId)/progress/$(progressId);
+    }
+
+    function validParentCurrent(userId, progressId, partId) {
+      let path = parentAfter(userId, progressId);
+      return exists(path)
+        && isValidProgress(get(path).data)
+        && !get(path).data.deleted
+        && isPartIndexBelowCount(partId, get(path).data.partCount);
+    }
+
+    match /users/{userId}/progress/{progressId} {
+      // O app lista só a coleção do UID autenticado e lê seus documentos.
+      allow get, list: if isOwner(userId);
+
+      // O mesmo validador protege criação e atualização.
+      allow create: if isOwner(userId)
+        && uidUnchanged(userId)
+        && isValidProgress(request.resource.data);
+
+      allow update: if isDocOwner(userId)
+        && uidNotModified(userId)
+        && isValidProgress(request.resource.data)
+        && request.resource.data.key == resource.data.key
+        && request.resource.data.schemaVersion == resource.data.schemaVersion;
+
+      // O app grava exclusões como tombstones para sincronizá-las entre aparelhos.
+      allow delete: if false;
+
+      match /parts/{partId} {
+        function validParentAfter() {
+          let path = parentAfter(userId, progressId);
+          return existsAfter(path) && isValidProgress(getAfter(path).data);
+        }
+
+        function isValidPart(data) {
+          return hasRequiredFields(data, ['value'])
+            && hasOnlyAllowedFields(data, ['value'])
+            && data.value is string
+            && data.value.size() <= 180000;
+        }
+
+        // Valores só podem ser lidos pela conta dona do caminho.
+        allow get, list: if isOwner(userId)
+          && isValidPartId(partId)
+          && validParentCurrent(userId, progressId, partId);
+
+        // Cada bloco deve caber na contagem declarada pelo documento pai,
+        // inclusive quando a alteração faz parte de um lote atômico.
+        allow create, update: if isOwner(userId)
+          && isValidPartId(partId)
+          && isValidPart(request.resource.data)
+          && validParentAfter()
+          && !getAfter(parentAfter(userId, progressId)).data.deleted
+          && isPartIndexBelowCount(partId, getAfter(parentAfter(userId, progressId)).data.partCount);
+
+        // Um bloco só pode ser removido se o pai for tombstone ou se a nova
+        // contagem deixar aquele índice fora do valor sincronizado.
+        allow delete: if isOwner(userId)
+          && isValidPartId(partId)
+          && validParentAfter()
+          && (getAfter(parentAfter(userId, progressId)).data.deleted
+            || !isPartIndexBelowCount(partId, getAfter(parentAfter(userId, progressId)).data.partCount));
+      }
+    }
+
+    // Default deny: qualquer caminho não descrito acima permanece privado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

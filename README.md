@@ -35,7 +35,30 @@ Antes de iniciar a prévia, encerre no terminal qualquer servidor antigo que já
 - Rotas internas podem ser abertas, atualizadas ou retomadas pelo botão Voltar do navegador, inclusive em links para disciplinas, conceitos e unidades.
 - Restaurações validam os dados antes de gravar e tentam recuperar o estado anterior se o navegador bloquear uma gravação intermediária.
 
-As respostas, avaliações e preferências ficam neste navegador. Nenhuma conta é necessária; exporte um backup para manter uma cópia separada.
+As respostas, avaliações e preferências continuam disponíveis localmente. Ao entrar com uma conta Google, o aplicativo sincroniza o progresso com a nuvem para continuar em outro navegador ou dispositivo. O backup exportado continua sendo uma cópia separada que o aluno pode guardar.
+
+## Ativar login Google e sincronização na nuvem
+
+O código usa Firebase Authentication para login e Cloud Firestore para progresso individual. A conta é identificada pelo UID do Firebase; as regras em `firestore.rules` impedem que um aluno leia ou altere o progresso de outro. O login Google não acessa o Google Drive do aluno: os dados usam o armazenamento e a cota do projeto Firebase/Google Cloud da plataforma.
+
+### Configuração atual
+
+- Projeto Firebase: `nexo-cursos`; aplicativo Web: `Nexo Cursos Web`.
+- Google Authentication está ativo. `localhost` e `guia-interativo-ti.vercel.app` estão autorizados para o login.
+- O Firestore `default` foi criado no modo nativo Enterprise, na região `southamerica-east1` (São Paulo), com início em modo de produção.
+- As regras de [`firestore.rules`](firestore.rules) foram publicadas no Firebase. Elas limitam o acesso ao UID autenticado, validam os campos e blocos gravados e negam os demais caminhos.
+- As cinco variáveis `VITE_FIREBASE_*` foram configuradas no projeto Vercel para produção, preview e desenvolvimento. Um novo deployment é necessário para que o site publicado passe a usá-las.
+- O projeto permanece no plano Spark. O Firestore oferece uma franquia gratuita; ultrapassá-la exige ativar faturamento para usar cotas pagas. Backups programados do Firestore não foram ativados, pois o Console exige o plano Blaze.
+
+### Preparar outra cópia local
+
+1. Copie `.env.example` para `.env.local` e preencha os cinco valores de configuração do aplicativo Web Firebase.
+2. No PowerShell do Windows, inicie o site com `npm.cmd run dev` e abra o endereço local informado pelo Vite usando `localhost` (não `127.0.0.1`). `localhost` já está autorizado no Firebase.
+3. Nunca coloque chaves de conta de serviço, credenciais administrativas ou senhas no arquivo `.env.local`, no navegador ou no repositório. A configuração Web Firebase é carregada no cliente; a proteção dos dados depende das regras de segurança.
+
+Para publicar futuras alterações de regras a partir do projeto local, o alias `.firebaserc` aponta para `nexo-cursos`. Depois de autenticar o Firebase CLI, use `npx.cmd -y firebase-tools@latest deploy --only firestore:rules --project nexo-cursos`. Não habilite regras abertas em produção.
+
+As telas indicam quando o usuário está conectado, sincronizando, sem internet ou com falha. Na primeira conta sem dados na nuvem, se houver progresso neste navegador, o aplicativo pede autorização antes de transferi-lo. O progresso sem login continua apenas neste navegador; a sincronização entre dispositivos começa depois do login e da configuração do Firebase.
 
 ## Estrutura do projeto
 

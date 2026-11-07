@@ -1,6 +1,7 @@
 import type { Course } from './data/curriculum';
 import type { PracticeRecord, QuizRecord } from './data/learning';
 import { getCourseEvidence } from './data/learning';
+import { useAuth } from './auth/AuthProvider';
 
 type ReviewRecord = { repetitions: number; intervalDays: number; dueAt: number; lastReviewedAt: number };
 type CourseProgress = { course: Course; total: number; reviewed: number; mastered: number; due: number; unseen: number; percent: number };
@@ -65,6 +66,7 @@ type ProgressProps = {
 };
 
 export function Progress({ courses, onOpenCourse, onReviewCourse, onPracticeCourse }: ProgressProps) {
+  const { user, status } = useAuth();
   const reviews = readReviews();
   const practiceRecords = readLocal<Record<string, PracticeRecord>>(PRACTICE_KEY, {});
   const routeRecords = readLocal<Record<string, boolean>>(ROUTE_KEY, {});
@@ -122,7 +124,7 @@ export function Progress({ courses, onOpenCourse, onReviewCourse, onPracticeCour
       <article><span>Temas iniciados</span><strong>{reviewedTotal} <i>/ {totalTopics}</i></strong><small>assuntos com pelo menos uma avaliação</small></article>
     </div>
     <section className="progress-learning-tools" aria-labelledby="guided-progress-title">
-      <div className="progress-section-heading"><div><p className="eyebrow">PRÁTICA E AUTOCONFERÊNCIA</p><h2 id="guided-progress-title">Seu progresso nos estudos guiados</h2></div><small>Dados salvos neste navegador</small></div>
+      <div className="progress-section-heading"><div><p className="eyebrow">PRÁTICA E AUTOCONFERÊNCIA</p><h2 id="guided-progress-title">Seu progresso nos estudos guiados</h2></div><small>{user && status === 'synced' ? 'Sincronizado na nuvem' : user ? 'Sincronização pendente' : 'Entre com Google para sincronizar'}</small></div>
       <div className="guided-progress-grid">
         <article><span>Respostas discursivas avaliadas</span><strong>{practiceRated}<i> / {totalPracticeQuestions}</i></strong><small>{practiceReady} marcadas como “expliquei e apliquei”</small><div className="guided-progress-track"><i style={{ width: `${totalPracticeQuestions ? practiceRated / totalPracticeQuestions * 100 : 0}%` }} /></div></article>
         <article><span>Etapas do roteiro concluídas</span><strong>{routeCompleted}<i> / {validRouteKeys.size}</i></strong><small>Etapas marcadas nas disciplinas e componentes</small><div className="guided-progress-track"><i style={{ width: `${validRouteKeys.size ? routeCompleted / validRouteKeys.size * 100 : 0}%` }} /></div></article>

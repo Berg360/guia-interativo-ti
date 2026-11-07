@@ -145,7 +145,7 @@ export function Planner({ courses, onStartReview, onStartPractice, onOpenProgram
 
   return <section className="planner-page">
     <div className="page-title-row"><div><p className="eyebrow">ORGANIZAÇÃO DO ESTUDO</p><h1>Calendário adaptativo</h1>
-      <p className="welcome-copy">Cada curso mantém seu próprio calendário. As sugestões priorizam revisões, domínio e sessões recentes; a agenda fica salva neste dispositivo.</p></div></div>
+      <p className="welcome-copy">Cada curso mantém seu próprio calendário. Entre com Google para sincronizar a agenda entre dispositivos; sem internet, as alterações aguardam conexão.</p></div></div>
     <div className="planner-program-picker"><label htmlFor="planner-program">Curso</label><select id="planner-program" value={program.id} onChange={(event) => changeProgram(event.target.value)}>{studyPrograms.map((item) => <option key={item.id} value={item.id}>{item.title}</option>)}</select><span>{program.units.length} tópicos de estudo · progresso separado por curso</span></div>
     <div className="planner-settings"><label>Tempo por sessão
       <select value={plan.goalMinutes} onChange={(event) => updatePlan((current) => ({ ...current, goalMinutes: Number(event.target.value) }))}>
@@ -169,7 +169,7 @@ export function Planner({ courses, onStartReview, onStartPractice, onOpenProgram
           <button className="planner-done-button" onClick={() => markDone(key, focus)} disabled={done}>{done ? 'Sessão registrada ✓' : 'Marcar concluída'}</button></div>
       </article>;
     })}</div> : <div className="planner-empty">Selecione ao menos um dia para montar sua semana.</div>}
-    <p className="planner-note">Dados armazenados localmente. Para cursos futuros, cadastre o programa e suas unidades em <code>src/data/studyPrograms.ts</code>.</p>
+    <p className="planner-note">O progresso sincroniza com sua conta Google quando você entra. Para cursos futuros, cadastre o programa e suas unidades em <code>src/data/studyPrograms.ts</code>.</p>
     <BackupPanel programId={program.id} />
   </section>;
 }

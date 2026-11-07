@@ -4,6 +4,7 @@ import { modelAnswers } from './data/answers';
 import { Quiz } from './Quiz';
 import { getBranchLearningState, getCourseEvidence, getLearningSnapshot } from './data/learning';
 import { conceptGuideFor } from './data/concepts';
+import { useAuth } from './auth/AuthProvider';
 
 type Rating = 'review' | 'partial' | 'ready';
 type PracticeRecord = { answer: string; revealed: boolean; rating?: Rating; updatedAt: number };
@@ -90,6 +91,7 @@ const spacedReviews = [
 type PracticeProps = { courses: Course[]; initialCourseId?: string; initialBranchIndex?: number; initialTopic?: string; onOpenCourse: (course: Course, branchIndex?: number) => void; onStartReview: (course: Course) => void };
 
 export function Practice({ courses, initialCourseId, initialBranchIndex, initialTopic, onOpenCourse, onStartReview }: PracticeProps) {
+  const { user } = useAuth();
   const firstCourse = courses[0];
   const [courseId, setCourseId] = useState(initialCourseId || firstCourse.id);
   const [records, setRecords] = useState<Records>(readRecords);
@@ -162,7 +164,7 @@ export function Practice({ courses, initialCourseId, initialBranchIndex, initial
       <small>{isFocusedConceptPractice ? `Aplique especificamente “${initialTopic}” neste desafio.` : 'Use o desafio para testar se consegue passar dos conceitos à prática.'}</small></article>
     {isFocusedConceptPractice && <div className="focused-practice-banner"><span>CONCEITO EM PRÁTICA</span><strong>{initialTopic}</strong><small>{course.title} · {course.branches[targetBranchIndex!].title}</small></div>}
     {!isFocusedConceptPractice && <section className="smart-route" aria-labelledby="smart-route-title">
-      <div className="smart-route-heading"><div><p className="eyebrow">TRILHA ADAPTÁVEL · 5 ETAPAS</p><h2 id="smart-route-title">Roteiro inteligente de estudo</h2><p>Siga a sequência no seu ritmo; o Plano de estudos organiza o tempo das sessões. Seu progresso fica salvo neste navegador.</p></div><div className="route-progress"><strong>{completedSteps}/{routeSteps.length}</strong><span>etapas concluídas</span><i><b style={{ width: `${completedSteps / routeSteps.length * 100}%` }} /></i></div></div>
+      <div className="smart-route-heading"><div><p className="eyebrow">TRILHA ADAPTÁVEL · 5 ETAPAS</p><h2 id="smart-route-title">Roteiro inteligente de estudo</h2><p>Siga a sequência no seu ritmo; {user ? 'o progresso sincroniza com sua conta Google.' : 'entre com Google para continuar em outros dispositivos.'}</p></div><div className="route-progress"><strong>{completedSteps}/{routeSteps.length}</strong><span>etapas concluídas</span><i><b style={{ width: `${completedSteps / routeSteps.length * 100}%` }} /></i></div></div>
       {recommendedBranch && branchEvidence && <article className={'route-focus-card focus-' + recommendedState}>
         <div className="route-focus-main"><p className="eyebrow">FOCO PERSONALIZADO · {recommendedState === 'verified' ? 'AMPLIAR' : recommendedState === 'review' ? 'RETOMAR' : recommendedState === 'new' ? 'PRIMEIRO CONTATO' : 'PRÓXIMA EVIDÊNCIA'}</p><h3>{recommendedBranch.title}</h3>
           <p>{recommendedState === 'review' ? 'Uma resposta recente indicou que esse ramo precisa de uma nova tentativa. Releia os conceitos e explique a conexão com um exemplo.'
@@ -215,7 +217,7 @@ export function Practice({ courses, initialCourseId, initialBranchIndex, initial
           </div>}
       </article>;
     })}</div>
-    <p className="practice-privacy-note">Respostas e avaliações ficam salvas neste navegador e podem ser incluídas no backup do painel “Meu progresso”.</p>
+    <p className="practice-privacy-note">{user ? 'Respostas e avaliações são vinculadas à sua conta e sincronizadas entre dispositivos quando há conexão.' : 'Respostas e avaliações ficam neste navegador até você entrar com Google; também podem ser incluídas no backup do painel “Meu progresso”.'}</p>
     </>}
   </section>;
 }

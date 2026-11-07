@@ -9,6 +9,9 @@ import { conceptGuideFor } from './data/concepts';
 import { getStudyProgram, programProgressKey, studyPrograms, type StudyProgram, type StudyUnit } from './data/studyPrograms';
 import { parseAppRoute, serializeAppRoute } from './data/routes.js';
 import { parseStoredObject, readStoredValue } from './data/storage.js';
+import { CloudAccountControl } from './auth/CloudAccountControl';
+import { PROGRESS_UPDATED_EVENT } from './auth/storageBridge';
+import { useAuth } from './auth/AuthProvider';
 
 type View = 'courses' | 'home' | 'map' | 'catalog' | 'extras' | 'study' | 'progress' | 'practice' | 'planner' | 'python' | 'program' | 'unit';
 const branchNames = ['Fundamentos', 'Estruturas e métodos', 'Aplicação', 'Validação e domínio'];
@@ -60,6 +63,7 @@ function Icon({ name }: { name: IconName }) {
   return <svg className="app-icon" viewBox="0 0 24 24" aria-hidden="true">{paths[name]}</svg>;
 }
 function App() {
+  const { user, status: cloudStatus } = useAuth();
   const searchInputRef = useRef<HTMLInputElement>(null);
   const moreButtonRef = useRef<HTMLButtonElement>(null);
   const firstMoreItemRef = useRef<HTMLButtonElement>(null);
@@ -87,6 +91,7 @@ function App() {
     return program && unit ? { programTitle: program.title, unit } : null;
   });
   const [moreOpen, setMoreOpen] = useState(false);
+  const [progressRevision, setProgressRevision] = useState(0);
   const activeCourse = courses.find((course) => course.id === activeId) ?? courses[0];
   const searchShortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
   const learning = getLearningSnapshot(courses);
@@ -146,6 +151,14 @@ function App() {
     window.addEventListener('keydown', handleSearchShortcut);
     return () => window.removeEventListener('keydown', handleSearchShortcut);
   }, []);
+  useEffect(() => {
+    const refreshProgressViews = () => {
+      setProgressRevision((current) => current + 1);
+      if (view === 'python') setPythonFrameSrc(pythonCourseUrl(readAppRoute().level));
+    };
+    window.addEventListener(PROGRESS_UPDATED_EVENT, refreshProgressViews);
+    return () => window.removeEventListener(PROGRESS_UPDATED_EVENT, refreshProgressViews);
+  }, [view]);
   useEffect(() => {
     function closeMoreMenu(event: KeyboardEvent) {
       if (event.key === 'Escape') {
@@ -264,8 +277,9 @@ function App() {
         <button className="course-switch-top" type="button" onClick={() => navigate('courses')}>Catálogo de cursos</button></>}
         {view === 'python' && <button className="python-catalog-button" type="button" onClick={() => navigate('courses')}>← Catálogo de cursos</button>}
         {view === 'courses' && <span className="catalog-topbar-label">Catálogo de cursos</span>}
+        {view !== 'python' && <CloudAccountControl />}
       </header>
-      <div className="page-content">
+      <div className="page-content" key={progressRevision}>
         {view === 'courses' && <section className="platform-catalog">
           <div className="platform-catalog-heading"><p className="eyebrow">NEXO CURSOS · APRENDIZAGEM ATIVA</p><h1>Um espaço para aprender com método.</h1><p>Escolha um curso para acessar suas disciplinas, mapas mentais, atividades e progresso.</p></div>
           <div className="program-card-grid">
@@ -284,7 +298,7 @@ function App() {
           const practicedUnits = program.units.filter((unit) => (progress[unit.id]?.sessions ?? 0) > 0).length;
           const sessions = Object.values(progress).reduce((sum, item) => sum + Math.max(0, Number(item.sessions) || 0), 0);
           const completion = program.units.length ? Math.round(practicedUnits / program.units.length * 100) : 0;
-          return <section className="generic-program-page"><div className="page-title-row"><div><p className="eyebrow">CURSO · {program.units.length} UNIDADES</p><h1>{program.title}</h1><p className="welcome-copy">{program.catalog.description}</p></div><button className="button-secondary" onClick={() => navigate('planner')}>Abrir calendário <span>→</span></button></div><section className="generic-progress-card" aria-label="Progresso deste curso"><div><small>PROGRESSO NESTE NAVEGADOR</small><strong>{practicedUnits} de {program.units.length} unidades praticadas</strong><span>{sessions} sessões registradas · {completion}% do conteúdo iniciado</span></div><div className="generic-progress-track"><i style={{ width: `${completion}%` }} /></div></section><div className="catalog-card"><div className="course-list-section"><div className="section-heading"><div><p className="eyebrow">CONTEÚDO</p><h2>Unidades de estudo</h2></div><span className="count-pill">{program.units.length} itens</span></div><div className="course-list">{program.units.map((unit) => <button className="course-row" key={unit.id} onClick={() => openProgramUnit(program, unit)}><span className="course-index">{String(unit.level ?? 0).padStart(2, '0')}</span><span className="course-row-body"><strong>{unit.title}</strong><span>{unit.details}</span></span><span aria-hidden="true">↗</span></button>)}</div></div></div></section>;
+          return <section className="generic-program-page"><div className="page-title-row"><div><p className="eyebrow">CURSO · {program.units.length} UNIDADES</p><h1>{program.title}</h1><p className="welcome-copy">{program.catalog.description}</p></div><button className="button-secondary" onClick={() => navigate('planner')}>Abrir calendário <span>→</span></button></div><section className="generic-progress-card" aria-label="Progresso deste curso"><div><small>{user && cloudStatus === 'synced' ? 'PROGRESSO SINCRONIZADO NA NUVEM' : 'PROGRESSO DESTE NAVEGADOR'}</small><strong>{practicedUnits} de {program.units.length} unidades praticadas</strong><span>{sessions} sessões registradas · {completion}% do conteúdo iniciado</span></div><div className="generic-progress-track"><i style={{ width: `${completion}%` }} /></div></section><div className="catalog-card"><div className="course-list-section"><div className="section-heading"><div><p className="eyebrow">CONTEÚDO</p><h2>Unidades de estudo</h2></div><span className="count-pill">{program.units.length} itens</span></div><div className="course-list">{program.units.map((unit) => <button className="course-row" key={unit.id} onClick={() => openProgramUnit(program, unit)}><span className="course-index">{String(unit.level ?? 0).padStart(2, '0')}</span><span className="course-row-body"><strong>{unit.title}</strong><span>{unit.details}</span></span><span aria-hidden="true">↗</span></button>)}</div></div></div></section>;
         })()}
         {view === 'python' && <section className="python-course-host" aria-label="Curso de Python">
           <iframe ref={pythonFrameRef} className="python-course-frame" src={pythonFrameSrc || '/python-course/index.html?embed=1'} title="PyNeuro Evolution — curso de Python" sandbox="allow-scripts allow-downloads" referrerPolicy="no-referrer" />
