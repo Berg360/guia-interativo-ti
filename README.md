@@ -6,17 +6,17 @@ Plataforma de aprendizagem ativa preparada para reunir cursos independentes. O c
 
 Abra esta pasta no VS Code e use o terminal integrado:
 
-    npm.cmd install
+    npm.cmd ci
     npm.cmd run dev
 
 Abra o endereço local informado pelo Vite. Para preparar a versão instalada e o modo offline, use a prévia de produção (ela usa a porta 5173, igual ao endereço padrão do aplicativo):
 
-    npm.cmd run build
+    npm.cmd run verify
     npm.cmd run preview
 
 Depois de abrir uma vez a versão de produção, navegadores compatíveis permitem instalá-la pelo menu do navegador. A instalação inicial dos pacotes requer conexão.
 
-Antes de iniciar a prévia, encerre no terminal qualquer servidor antigo que já esteja usando a porta 5173 (`Ctrl+C`). A prévia conectada atualiza o cache da versão instalada e baixa os arquivos essenciais; depois, abra o aplicativo mais uma vez antes de usá-lo offline.
+Antes de iniciar a prévia, encerre no terminal qualquer servidor antigo que já esteja usando a porta 5173 (`Ctrl+C`). A prévia conectada atualiza o cache da versão instalada e baixa os arquivos essenciais. Abra o laboratório Python uma vez enquanto estiver conectado para armazenar também o motor WebAssembly e a biblioteca padrão; depois disso, o laboratório pode ser usado offline neste navegador.
 
 ## Recursos do curso
 
@@ -27,10 +27,13 @@ Antes de iniciar a prévia, encerre no terminal qualquer servidor antigo que já
 - Navegação direta por disciplinas e componentes, com mapas mentais clicáveis.
 - Conteúdos, pré-requisitos sugeridos, práticas, ferramentas e critérios de domínio.
 - Conteúdo individual por conceito e acesso à prática guiada com confirmação de estudo para manter disciplina, ramo e conceito em foco.
+- As fichas de conceito identificam se são específicas da disciplina, conceituais ou contextualizadas por modelo, para deixar a origem do apoio visível.
 - Prática guiada, quiz com autocorreção e revisão espaçada.
 - Calendário adaptativo separado por curso: a trilha de Gestão de TI considera tópicos novos e revisões; Python considera cartões vencidos e evidências de domínio.
 - Preferências, sessões concluídas e histórico do calendário ficam separados por curso e salvos localmente.
 - Backup individual por curso, incluindo o calendário; também aceita backups antigos de Gestão de TI e o JSON bruto de progresso exportado pelo curso Python.
+- Rotas internas podem ser abertas, atualizadas ou retomadas pelo botão Voltar do navegador, inclusive em links para disciplinas, conceitos e unidades.
+- Restaurações validam os dados antes de gravar e tentam recuperar o estado anterior se o navegador bloquear uma gravação intermediária.
 
 As respostas, avaliações e preferências ficam neste navegador. Nenhuma conta é necessária; exporte um backup para manter uma cópia separada.
 
@@ -44,16 +47,22 @@ As respostas, avaliações e preferências ficam neste navegador. Nenhuma conta 
 - src/Planner.tsx: calendário adaptativo; seus dados usam chaves locais separadas para cada curso.
 - src/BackupPanel.tsx: exportação e restauração isoladas por curso.
 - src/data/studyPrograms.ts: cadastro central dos cursos e unidades usados pelo calendário e pelos backups.
+- src/data/routes.js e src/data/storage.js: rotas compartilháveis e acesso local resiliente, com operações de backup transacionais.
+- tests/: testes automatizados das rotas, validação de backups e recuperação após falhas de armazenamento.
 - src/styles.css: interface responsiva e identidade visual.
 - public/manifest.webmanifest e public/marca.svg: instalação e identidade da plataforma.
 - public/sw.js: cache da versão instalada para uso offline.
-- public/python-course/index.html: curso independente de Python integrado no catálogo.
+- public/python-course/index.html, course.css e course.js: estrutura, estilos e comportamento do curso Python separados para facilitar manutenção.
 - scripts/prepare-python-course.mjs: gera o CSS e copia as bibliotecas locais do curso.
 
-Ao executar `npm.cmd install`, o passo `postinstall` prepara os arquivos locais de Tailwind, Chart.js e Pyodide para o curso Python. A compilação também funciona com os recursos offline já incluídos, mesmo antes de instalar esses pacotes opcionais. O laboratório pode demorar alguns segundos na primeira inicialização do motor WebAssembly. Caso o motor completo não esteja disponível, o código inclui um interpretador local de contingência com suporte limitado a construções comuns de Python.
+`npm.cmd run verify` executa os testes automatizados e depois gera a versão de produção. As dependências diretas estão fixadas no manifesto e no arquivo de lock para que instalações reproduzam as versões verificadas.
+
+Ao executar `npm.cmd ci`, o passo de preparação gera o CSS local e copia apenas os arquivos de runtime necessários do Chart.js e do Pyodide. O laboratório pode demorar alguns segundos na primeira inicialização do motor WebAssembly. Caso o motor completo não esteja disponível, o código inclui um interpretador local de contingência com suporte limitado a construções comuns de Python.
 
 ### Adicionar um curso ao calendário e aos backups
 
-Cadastre o programa e suas unidades em `src/data/studyPrograms.ts`. Assim que estiver nessa lista, ele aparece automaticamente no seletor do calendário e no seletor de exportação/restauração, com agenda e progresso isolados por `id`. Para um curso novo, use `kind: 'generic'`, descreva cada unidade e indique suas chaves locais em `storageKeys`; a plataforma aplica a priorização padrão com base no histórico de sessões. Cursos com lógica própria, como Python, podem fornecer um adaptador de progresso para usar seus dados de domínio e revisão na priorização.
+Cadastre o programa em `src/data/studyPrograms.ts` com `id` exclusivo, `title`, `kind`, `description`, `catalog` (descrição, métrica e marca), `units` e `storageKeys`. Para um curso novo, use `kind: 'generic'` e descreva o conteúdo de cada unidade. A partir desse cadastro, o curso aparece no catálogo, abre uma página de unidades, entra no calendário adaptativo e ganha backup e progresso isolados pelo `id`.
+
+Esse registro genérico fornece a estrutura comum. Para mapas mentais, quiz e prática com conteúdo próprio, os conceitos também precisam ser escritos no formato de disciplina em `src/data/curriculum.ts`, com materiais em `src/data/concepts.ts` e respostas em `src/data/answers.ts`. Python mantém seu adaptador dedicado porque o laboratório e o motor de execução são específicos desse curso.
 
 O indicador de ramo validado é didático e local; não representa nota acadêmica ou certificação.

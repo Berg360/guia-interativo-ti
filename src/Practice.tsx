@@ -37,6 +37,18 @@ function questionFor(course: Course, branchIndex: number, selectedTopic?: string
 export function answerGuideFor(course: Course, branchIndex: number, selectedTopic?: string) {
   const branch = course.branches[branchIndex];
   const topics = selectedTopic || branch.topics.join(', ');
+  if (selectedTopic) {
+    const guide = conceptGuideFor(course, branchIndex, selectedTopic);
+    return {
+      heading: `Resposta orientadora · ${selectedTopic}`,
+      answer: `${guide.explanation} No contexto de ${course.title}, aplique essa ideia assim: ${guide.example}`,
+      checks: [
+        `Explique com suas palavras o significado e a função de ${selectedTopic}.`,
+        `Dê um exemplo coerente com a situação da disciplina: ${course.practice}`,
+        guide.related.length ? `Conecte o conceito a: ${guide.related.join(', ')}.` : `Relacione a resposta ao critério de domínio: ${course.mastery}`,
+      ],
+    };
+  }
   const specificAnswer = modelAnswers[course.id]?.[branchIndex];
   if (branchIndex === 0) return {
     heading: 'Conceitos essenciais',
@@ -181,6 +193,7 @@ export function Practice({ courses, initialCourseId, initialBranchIndex, initial
     <div className="practice-question-list">{practiceBranches.map(({ branch, index }) => {
       const focusedTopic = isFocusedConceptPractice && index === targetBranchIndex ? initialTopic : undefined;
       const conceptGuide = focusedTopic ? conceptGuideFor(course, index, focusedTopic) : undefined;
+      const focusedAnswerGuide = focusedTopic ? answerGuideFor(course, index, focusedTopic) : undefined;
       const branchKey = course.id + ':' + branch.id;
       const key = focusedTopic ? branchKey + ':topic:' + encodeURIComponent(focusedTopic) : branchKey;
       const record = records[key] ?? { answer: '', revealed: false };
@@ -191,7 +204,7 @@ export function Practice({ courses, initialCourseId, initialBranchIndex, initial
         <label className="practice-answer-label">Sua resposta<textarea value={record.answer} onChange={(event) => updateRecord(branch.id, { answer: event.target.value, revealed: false, rating: undefined }, focusedTopic)} placeholder="Escreva uma explicação curta ou os passos da sua solução." rows={4} /></label>
         {!record.revealed ? <button className="button-secondary" onClick={() => updateRecord(branch.id, { revealed: true }, focusedTopic)}>{focusedTopic ? 'Revelar roteiro deste conceito' : 'Ver resposta comentada'} <span>↓</span></button>
           : <div className="practice-rubric"><strong>{conceptGuide ? `Roteiro de ${focusedTopic}` : answerGuideFor(course, index).heading + ' · resposta orientadora'}</strong>
-            {conceptGuide ? <><p className="answer-reference">{conceptGuide.explanation}</p><p><strong>Exemplo aplicado:</strong> {conceptGuide.example}</p><p><strong>Gancho de memória:</strong> {conceptGuide.memoryCue}</p><p><strong>Critério de domínio da disciplina:</strong> {course.mastery}</p></>
+            {conceptGuide ? <><p className="answer-reference">{focusedAnswerGuide?.answer ?? conceptGuide.explanation}</p><p><strong>Pergunta para recuperar:</strong> {conceptGuide.recallPrompt}</p><p><strong>Gancho de memória:</strong> {conceptGuide.memoryCue}</p><strong>Compare com estes critérios do conceito</strong><ul>{focusedAnswerGuide?.checks.map((check) => <li key={check}>{check}</li>)}</ul><p><strong>Critério de domínio da disciplina:</strong> {course.mastery}</p></>
               : <><p className="answer-reference">{answerGuideFor(course, index).answer}</p><strong>Pontos que devem aparecer</strong><ul>{answerGuideFor(course, index).checks.map((check) => <li key={check}>{check}</li>)}</ul></>}
             <p>Questões abertas podem ter respostas corretas diferentes. Use este gabarito comentado para comparar os conceitos, a aplicação e os critérios de domínio da disciplina.</p>
             <div className="practice-rating"><span>Como foi?</span>

@@ -6,9 +6,10 @@ export type ConceptGuide = {
   recallPrompt: string;
   memoryCue: string;
   related: string[];
+  origin: 'course-specific' | 'curated' | 'contextualized';
 };
 
-type LessonSeed = Omit<ConceptGuide, 'related'>;
+type LessonSeed = Omit<ConceptGuide, 'related' | 'origin'>;
 
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase('pt-BR').trim();
@@ -155,11 +156,72 @@ const conceptLessons: Record<string, LessonSeed> = {
   },
 };
 
+const courseConceptLessons: Record<string, Record<string, LessonSeed>> = {
+  'course-01': {
+    decomposicao: {
+      explanation: 'Na construção de algoritmos, decomposição transforma uma tarefa ampla em etapas pequenas, com entradas, saídas e responsabilidades identificáveis. Cada etapa deve poder ser explicada e conferida antes da integração.',
+      example: 'Para calcular uma média, separe: ler as notas, validar a quantidade e os limites, somar os valores, dividir pela quantidade e mostrar o resultado. Teste cada etapa com dados simples e com uma lista vazia.',
+      recallPrompt: 'Quais são as etapas, o que cada uma recebe e que resultado entrega? Como você verificaria cada etapa isoladamente?',
+      memoryCue: 'Problema → etapas → contratos → integração testada.',
+    },
+    'entradas/saidas': {
+      explanation: 'Entrada é o dado fornecido ao algoritmo; saída é o resultado que ele comunica. O processamento aplica as regras entre ambos. A validação verifica se a entrada permite executar essas regras sem produzir um resultado enganoso.',
+      example: 'Num cálculo de desconto, o preço e a taxa são entradas, a regra de cálculo é o processamento e o preço final é a saída. Rejeite preços negativos e taxas fora do intervalo previsto.',
+      recallPrompt: 'Que valores entram, qual regra os transforma e como você confirma que a saída é válida?',
+      memoryCue: 'Entrada → validação → processamento → saída verificável.',
+    },
+    tipos: {
+      explanation: 'O tipo determina quais valores uma variável pode representar e quais operações fazem sentido. Em algoritmos, distinguir números, texto e valores lógicos evita misturar intenção com representação.',
+      example: 'Uma nota pode ser numérica para permitir média e comparação; o nome do aluno é texto. Se a nota chega como texto, converta e valide antes do cálculo.',
+      recallPrompt: 'Que tipo representa cada dado e o que pode dar errado se ele for usado como outro tipo?',
+      memoryCue: 'Dado → tipo coerente → operação válida.',
+    },
+    variaveis: {
+      explanation: 'Variáveis dão nomes aos valores que um algoritmo precisa guardar ou atualizar. O nome deve comunicar a função do dado; a atribuição define o valor disponível para os próximos passos.',
+      example: 'Em um cálculo de média, `soma_notas` acumula os valores e `quantidade_notas` registra quantos foram lidos. Nomes distintos evitam confundir total com número de itens.',
+      recallPrompt: 'Que estado o algoritmo precisa guardar? Os nomes mostram o papel de cada valor?',
+      memoryCue: 'Nome claro → valor → atualização controlada.',
+    },
+    operadores: {
+      explanation: 'Operadores expressam cálculos, comparações e combinações lógicas. A precedência define a ordem de avaliação; parênteses tornam a intenção explícita e reduzem erros de interpretação.',
+      example: 'Para calcular desconto, `preco * (1 - taxa)` explicita que a taxa é subtraída de 1 antes de multiplicar. Confira o resultado com preço e taxa pequenos, cujo efeito você consiga calcular mentalmente.',
+      recallPrompt: 'Qual operação cada operador representa? A precedência corresponde à regra que você pretende aplicar?',
+      memoryCue: 'Operador → precedência → resultado conferido.',
+    },
+    selecao: {
+      explanation: 'Seleção escolhe um caminho de execução com base em uma condição lógica. Uma estrutura condicional deve cobrir os casos relevantes, inclusive limites e entradas inválidas.',
+      example: 'Para aprovar uma nota, defina primeiro a regra, por exemplo `nota >= 7`. Teste valores abaixo, exatamente no limite e acima dele para verificar cada ramo.',
+      recallPrompt: 'Qual condição decide o caminho? Que casos são verdadeiros, falsos e de limite?',
+      memoryCue: 'Condição → ramo escolhido → casos de fronteira.',
+    },
+    repeticao: {
+      explanation: 'Repetição executa um bloco enquanto houver itens ou enquanto uma condição permitir. O algoritmo precisa deixar claro como o estado muda e por que o laço termina.',
+      example: 'Ao somar notas, avance por cada item, acumule o total e conte quantos foram processados. Verifique a lista vazia e confirme que o índice ou iterador progride.',
+      recallPrompt: 'O que faz o laço continuar, o que muda a cada volta e qual condição garante a parada?',
+      memoryCue: 'Estado inicial → passo repetido → condição de parada.',
+    },
+    colecoes: {
+      explanation: 'Coleções agrupam valores relacionados para que o algoritmo possa percorrê-los, consultá-los ou atualizá-los como conjunto. A estrutura adequada depende de como os dados serão acessados e modificados.',
+      example: 'Uma lista de notas permite percorrer valores na ordem recebida. Se também for necessário localizar a nota por identificador, associe cada dado a uma chave com significado claro.',
+      recallPrompt: 'Os dados precisam manter ordem, evitar duplicatas ou ser localizados por uma chave?',
+      memoryCue: 'Forma de acesso → estrutura → operação adequada.',
+    },
+    funcoes: {
+      explanation: 'Funções agrupam uma tarefa sob um nome e definem quais dados recebem e qual resultado devolvem. Bons limites permitem reutilizar, testar e modificar uma parte sem reescrever o algoritmo inteiro.',
+      example: 'Uma função `calcular_media(notas)` pode validar a coleção e devolver o valor calculado. Deixe a leitura de teclado e a exibição da resposta em etapas separadas.',
+      recallPrompt: 'O que a função recebe, que responsabilidade cumpre e que resultado promete devolver?',
+      memoryCue: 'Entrada → responsabilidade única → saída testável.',
+    },
+  },
+};
+
 export function conceptGuideFor(course: Course, branchIndex: number, topic: string): ConceptGuide {
   const branch = course.branches[branchIndex] ?? course.branches[0];
   const related = branch.topics.filter((item) => normalize(item) !== normalize(topic));
+  const courseSpecific = courseConceptLessons[course.id]?.[normalize(topic)];
+  if (courseSpecific) return { ...courseSpecific, related, origin: 'course-specific' };
   const curated = conceptLessons[normalize(topic)];
-  if (curated) return { ...curated, related };
+  if (curated) return { ...curated, related, origin: 'curated' };
 
   const branchFocus = branchIndex === 0
     ? 'defina o conceito, seus limites e a necessidade que ele atende'
@@ -175,5 +237,6 @@ export function conceptGuideFor(course: Course, branchIndex: number, topic: stri
     recallPrompt: `Sem consultar o mapa, explique ${topic}, compare-o com ${related[0] ?? 'uma ideia próxima'} e dê um exemplo ligado a ${course.title}.`,
     memoryCue: `${topic} → função em ${course.title} → exemplo próprio → evidência de domínio.`,
     related,
+    origin: 'contextualized',
   };
 }

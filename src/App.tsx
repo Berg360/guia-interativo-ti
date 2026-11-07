@@ -6,9 +6,11 @@ import { Practice } from './Practice';
 import { Planner } from './Planner';
 import { getBranchLearningState, getLearningSnapshot } from './data/learning';
 import { conceptGuideFor } from './data/concepts';
-import { getStudyProgram, type StudyUnit } from './data/studyPrograms';
+import { getStudyProgram, programProgressKey, studyPrograms, type StudyProgram, type StudyUnit } from './data/studyPrograms';
+import { parseAppRoute, serializeAppRoute } from './data/routes.js';
+import { parseStoredObject, readStoredValue } from './data/storage.js';
 
-type View = 'courses' | 'home' | 'map' | 'catalog' | 'extras' | 'study' | 'progress' | 'practice' | 'planner' | 'python' | 'unit';
+type View = 'courses' | 'home' | 'map' | 'catalog' | 'extras' | 'study' | 'progress' | 'practice' | 'planner' | 'python' | 'program' | 'unit';
 const branchNames = ['Fundamentos', 'Estruturas e métodos', 'Aplicação', 'Validação e domínio'];
 const kindLabel: Record<CourseKind, string> = { discipline: 'Disciplina', elective: 'Optativa', project: 'Projeto integrador', extension: 'Extensão', component: 'Componente' };
 const kindClass: Record<CourseKind, string> = { discipline: 'kind-blue', elective: 'kind-violet', project: 'kind-amber', extension: 'kind-green', component: 'kind-gray' };
@@ -19,6 +21,26 @@ function getRecentCourse() {
   } catch {
     return undefined;
   }
+}
+function readAppRoute() {
+  try { return parseAppRoute(window.location.search, courses, studyPrograms); }
+  catch { return { view: 'courses' as const }; }
+}
+function pythonCourseUrl(targetLevel?: number) {
+  const state: Record<string, string | null> = {
+    pyneuro_evolution_state_v2: readStoredValue('pyneuro_evolution_state_v2'),
+    pyneuro_evolution_backup_last_good: readStoredValue('pyneuro_evolution_backup_last_good'),
+  };
+  if (targetLevel && state.pyneuro_evolution_state_v2) {
+    try {
+      const saved = JSON.parse(state.pyneuro_evolution_state_v2);
+      saved.lastAccessedLevelId = targetLevel;
+      saved.lastActiveView = 'trilha';
+      state.pyneuro_evolution_state_v2 = JSON.stringify(saved);
+    } catch { /* O curso abre no último nível válido. */ }
+  }
+  const targetQuery = targetLevel ? `&level=${targetLevel}` : '';
+  return '/python-course/index.html?embed=1' + targetQuery + '#' + encodeURIComponent(JSON.stringify(state));
 }
 function SearchIcon() {
   return <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="10.8" cy="10.8" r="6.6" /><path d="m16 16 4.5 4.5" /></svg>;
@@ -43,18 +65,27 @@ function App() {
   const firstMoreItemRef = useRef<HTMLButtonElement>(null);
   const pythonFrameRef = useRef<HTMLIFrameElement>(null);
   const moreWasOpen = useRef(false);
-  const [view, setView] = useState<View>('courses');
-  const [activeId, setActiveId] = useState(() => getRecentCourse()?.id ?? courses[0].id);
+  const [view, setView] = useState<View>(() => readAppRoute().view as View);
+  const [activeId, setActiveId] = useState(() => readAppRoute().courseId ?? getRecentCourse()?.id ?? courses[0].id);
   const [query, setQuery] = useState('');
   const [studyCourseId, setStudyCourseId] = useState('all');
-  const [practiceCourseId, setPracticeCourseId] = useState('course-01');
-  const [practiceTarget, setPracticeTarget] = useState<{ branchIndex: number; topic: string } | null>(null);
-  const [focusBranch, setFocusBranch] = useState(0);
-  const [focusTopic, setFocusTopic] = useState('');
+  const [practiceCourseId, setPracticeCourseId] = useState(() => readAppRoute().courseId ?? courses[0].id);
+  const [practiceTarget, setPracticeTarget] = useState<{ branchIndex: number; topic: string } | null>(() => {
+    const route = readAppRoute();
+    return route.branchIndex !== undefined && route.topic ? { branchIndex: route.branchIndex, topic: route.topic } : null;
+  });
+  const [focusBranch, setFocusBranch] = useState(() => readAppRoute().branchIndex ?? 0);
+  const [focusTopic, setFocusTopic] = useState(() => readAppRoute().topic ?? '');
   const [practiceGateChecked, setPracticeGateChecked] = useState(false);
   const [practiceGateOpen, setPracticeGateOpen] = useState(false);
-  const [pythonFrameSrc, setPythonFrameSrc] = useState('');
-  const [unitTarget, setUnitTarget] = useState<{ programTitle: string; unit: StudyUnit } | null>(null);
+  const [pythonFrameSrc, setPythonFrameSrc] = useState(() => readAppRoute().view === 'python' ? pythonCourseUrl(readAppRoute().level) : '');
+  const [selectedProgramId, setSelectedProgramId] = useState(() => readAppRoute().programId ?? '');
+  const [unitTarget, setUnitTarget] = useState<{ programTitle: string; unit: StudyUnit } | null>(() => {
+    const route = readAppRoute();
+    const program = route.programId ? getStudyProgram(route.programId) : undefined;
+    const unit = program?.units.find((item) => item.id === route.unitId);
+    return program && unit ? { programTitle: program.title, unit } : null;
+  });
   const [moreOpen, setMoreOpen] = useState(false);
   const activeCourse = courses.find((course) => course.id === activeId) ?? courses[0];
   const searchShortcut = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘ K' : 'Ctrl K';
@@ -77,6 +108,33 @@ function App() {
   const selectedBranch = activeCourse.branches[focusBranch] ?? activeCourse.branches[0];
   const selectedTopic = focusTopic || selectedBranch.topics[0] || activeCourse.title;
   const selectedConcept = conceptGuideFor(activeCourse, focusBranch, selectedTopic);
+
+  useEffect(() => {
+    function restoreFromAddress() {
+      const route = readAppRoute();
+      setView(route.view as View);
+      setQuery('');
+      setMoreOpen(false);
+      setPracticeGateChecked(false);
+      setPracticeGateOpen(false);
+      setFocusBranch(route.branchIndex ?? 0);
+      setFocusTopic(route.topic ?? '');
+      setSelectedProgramId(route.programId ?? '');
+      if (route.courseId) {
+        setActiveId(route.courseId);
+        setPracticeCourseId(route.courseId);
+      }
+      setPracticeTarget(route.branchIndex !== undefined && route.topic
+        ? { branchIndex: route.branchIndex, topic: route.topic }
+        : null);
+      const program = route.programId ? getStudyProgram(route.programId) : undefined;
+      const unit = program?.units.find((item) => item.id === route.unitId);
+      setUnitTarget(program && unit ? { programTitle: program.title, unit } : null);
+      if (route.view === 'python') setPythonFrameSrc(pythonCourseUrl(route.level));
+    }
+    window.addEventListener('popstate', restoreFromAddress);
+    return () => window.removeEventListener('popstate', restoreFromAddress);
+  }, []);
 
   useEffect(() => {
     function handleSearchShortcut(event: KeyboardEvent) {
@@ -123,28 +181,27 @@ function App() {
     window.addEventListener('message', receivePythonStorage);
     return () => window.removeEventListener('message', receivePythonStorage);
   }, []);
+  function writeBrowserRoute(route: { view: View; courseId?: string; branchIndex?: number; topic?: string; programId?: string; unitId?: string; level?: number }, mode: 'push' | 'replace' = 'push') {
+    const nextUrl = serializeAppRoute(route, window.location.href);
+    const currentUrl = window.location.pathname + window.location.search + window.location.hash;
+    if (nextUrl === currentUrl) return;
+    if (mode === 'replace') window.history.replaceState({ nexoRoute: route }, '', nextUrl);
+    else window.history.pushState({ nexoRoute: route }, '', nextUrl);
+  }
   function openPythonCourse(targetLevel?: number) {
-    const keys = ['pyneuro_evolution_state_v2', 'pyneuro_evolution_backup_last_good'];
-    const state: Record<string, string | null> = {};
-    try { keys.forEach((key) => { state[key] = localStorage.getItem(key); }); } catch { /* O curso pode iniciar sem estado salvo. */ }
-    if (targetLevel && state['pyneuro_evolution_state_v2']) {
-      try {
-        const saved = JSON.parse(state['pyneuro_evolution_state_v2']);
-        saved.lastAccessedLevelId = targetLevel;
-        saved.lastActiveView = 'trilha';
-        state['pyneuro_evolution_state_v2'] = JSON.stringify(saved);
-      } catch { /* O curso abre no último nível válido salvo. */ }
-    }
-    const targetQuery = targetLevel ? `&level=${targetLevel}` : '';
-    setPythonFrameSrc('/python-course/index.html?embed=1' + targetQuery + '#' + encodeURIComponent(JSON.stringify(state)));
+    setPythonFrameSrc(pythonCourseUrl(targetLevel));
+    writeBrowserRoute({ view: 'python', programId: 'python-profissional', ...(targetLevel ? { level: targetLevel } : {}) });
     setView('python'); setQuery(''); setMoreOpen(false);
   }
   function chooseCourse(course: Course, branchIndex = 0) {
+    const nextBranch = Math.min(Math.max(branchIndex, 0), course.branches.length - 1);
+    writeBrowserRoute({ view: 'map', courseId: course.id, branchIndex: nextBranch });
     setActiveId(course.id);
     try { localStorage.setItem('trilha-ti-recent-course-v1', course.id); } catch { /* A seleção permanece nesta sessão. */ }
-    setFocusBranch(Math.min(Math.max(branchIndex, 0), course.branches.length - 1)); setFocusTopic(''); setPracticeGateChecked(false); setPracticeGateOpen(false); setView('map'); setQuery(''); setMoreOpen(false);
+    setFocusBranch(nextBranch); setFocusTopic(''); setPracticeGateChecked(false); setPracticeGateOpen(false); setView('map'); setQuery(''); setMoreOpen(false);
   }
   function startPractice(course: Course, branchIndex?: number, topic?: string) {
+    writeBrowserRoute({ view: 'practice', courseId: course.id, ...(typeof branchIndex === 'number' ? { branchIndex } : {}), ...(topic ? { topic } : {}) });
     setPracticeCourseId(course.id);
     setPracticeTarget(typeof branchIndex === 'number' && topic ? { branchIndex, topic } : null);
     setView('practice'); setQuery(''); setMoreOpen(false);
@@ -161,8 +218,20 @@ function App() {
     }
     startPractice(activeCourse, focusBranch, selectedTopic);
   }
-  function navigate(nextView: View) {
+  function navigate(nextView: View, routeExtras: { courseId?: string; programId?: string; unitId?: string } = {}) {
+    const route = { view: nextView, ...(nextView !== 'courses' ? { courseId: activeId } : {}), ...routeExtras };
+    writeBrowserRoute(route);
     setView(nextView); setQuery(''); setMoreOpen(false);
+  }
+  function openCatalogProgram(program: StudyProgram) {
+    if (program.kind === 'curriculum') { navigate('home'); return; }
+    if (program.kind === 'python') { openPythonCourse(); return; }
+    setSelectedProgramId(program.id);
+    navigate('program', { programId: program.id });
+  }
+  function openProgramUnit(program: StudyProgram, unit: StudyUnit) {
+    setUnitTarget({ programTitle: program.title, unit });
+    navigate('unit', { programId: program.id, unitId: unit.id });
   }
   function courseList(title: string, items: Course[]) {
     return <section className="course-list-section">
@@ -190,8 +259,8 @@ function App() {
     </aside>
     <main className="main-area">
       <header className="topbar"><button type="button" className="platform-brand" onClick={() => navigate('courses')}><img src="/marca.svg" alt="" /><span>Nexo <b>Cursos</b></span></button>
-        {view !== 'courses' && view !== 'python' && <><div className="breadcrumbs"><span>Curso</span><b>/</b><strong>{view === 'map' ? activeCourse.title : view === 'catalog' ? 'Todas as disciplinas' : view === 'extras' ? 'Optativas e atividades' : view === 'study' ? 'Revisão espaçada' : view === 'practice' ? 'Prática guiada' : view === 'planner' ? 'Calendário de estudos' : view === 'progress' ? 'Meu progresso' : view === 'unit' ? unitTarget?.unit.title ?? 'Conteúdo do curso' : 'Visão geral'}</strong></div>
-        <label className="search-box"><SearchIcon /><input ref={searchInputRef} value={query} onChange={(event) => { setQuery(event.target.value); if (event.target.value) setView('catalog'); }} placeholder="Buscar disciplina ou assunto" aria-label="Buscar disciplina ou assunto" /><kbd>{searchShortcut}</kbd></label>
+        {view !== 'courses' && view !== 'python' && <><div className="breadcrumbs"><span>Curso</span><b>/</b><strong>{view === 'map' ? activeCourse.title : view === 'catalog' ? 'Todas as disciplinas' : view === 'extras' ? 'Optativas e atividades' : view === 'study' ? 'Revisão espaçada' : view === 'practice' ? 'Prática guiada' : view === 'planner' ? 'Calendário de estudos' : view === 'progress' ? 'Meu progresso' : view === 'unit' ? unitTarget?.unit.title ?? 'Conteúdo do curso' : view === 'program' ? getStudyProgram(selectedProgramId)?.title ?? 'Curso' : 'Visão geral'}</strong></div>
+        <label className="search-box"><SearchIcon /><input ref={searchInputRef} value={query} onChange={(event) => { setQuery(event.target.value); if (event.target.value && view !== 'catalog') { writeBrowserRoute({ view: 'catalog', courseId: activeId }); setView('catalog'); } }} placeholder="Buscar disciplina ou assunto" aria-label="Buscar disciplina ou assunto" /><kbd>{searchShortcut}</kbd></label>
         <button className="course-switch-top" type="button" onClick={() => navigate('courses')}>Catálogo de cursos</button></>}
         {view === 'python' && <button className="python-catalog-button" type="button" onClick={() => navigate('courses')}>← Catálogo de cursos</button>}
         {view === 'courses' && <span className="catalog-topbar-label">Catálogo de cursos</span>}
@@ -200,14 +269,23 @@ function App() {
         {view === 'courses' && <section className="platform-catalog">
           <div className="platform-catalog-heading"><p className="eyebrow">NEXO CURSOS · APRENDIZAGEM ATIVA</p><h1>Um espaço para aprender com método.</h1><p>Escolha um curso para acessar suas disciplinas, mapas mentais, atividades e progresso.</p></div>
           <div className="program-card-grid">
-            <button className="program-card available-program" type="button" onClick={() => { setView('home'); setQuery(''); }}>
-              <span className="program-card-mark"><img src="/marca.svg" alt="" /></span><span className="program-status">CURSO DISPONÍVEL</span><strong>Gestão da Tecnologia da Informação</strong><span className="program-description">Desenvolva conhecimentos de tecnologia, dados, serviços digitais e gestão com estudo guiado e prática.</span><span className="program-card-footer"><span>{courses.length} disciplinas e componentes</span><b>Acessar curso <i>→</i></b></span>
-            </button>
-            <button className="program-card available-program python-program" type="button" onClick={() => openPythonCourse()}>
-              <span className="program-card-mark python-program-mark">Py</span><span className="program-status">CURSO DISPONÍVEL</span><strong>Python Profissional · PyNeuro Evolution</strong><span className="program-description">Uma trilha prática com 12 níveis, laboratório de código, projetos, revisão espaçada e acompanhamento de domínio.</span><span className="program-card-footer"><span>12 níveis · 8 áreas de aprendizagem</span><b>Acessar curso <i>→</i></b></span>
-            </button>
+            {studyPrograms.map((program) => <button key={program.id} className={'program-card available-program ' + (program.kind === 'python' ? 'python-program' : '')} type="button" onClick={() => openCatalogProgram(program)}>
+              <span className={'program-card-mark ' + (program.kind === 'python' ? 'python-program-mark' : '')}>{program.kind === 'curriculum' ? <img src="/marca.svg" alt="" /> : program.catalog.mark}</span>
+              <span className="program-status">CURSO DISPONÍVEL</span><strong>{program.title}</strong>
+              <span className="program-description">{program.catalog.description}</span>
+              <span className="program-card-footer"><span>{program.units.length} {program.catalog.metric}</span><b>Acessar curso <i>→</i></b></span>
+            </button>)}
           </div>
         </section>}
+        {view === 'program' && (() => {
+          const program = getStudyProgram(selectedProgramId);
+          if (!program || program.kind !== 'generic') return <div className="empty-state">Este curso ainda não tem unidades cadastradas.</div>;
+          const progress = parseStoredObject(readStoredValue(programProgressKey(program.id)), {}) as Record<string, { sessions?: number }>;
+          const practicedUnits = program.units.filter((unit) => (progress[unit.id]?.sessions ?? 0) > 0).length;
+          const sessions = Object.values(progress).reduce((sum, item) => sum + Math.max(0, Number(item.sessions) || 0), 0);
+          const completion = program.units.length ? Math.round(practicedUnits / program.units.length * 100) : 0;
+          return <section className="generic-program-page"><div className="page-title-row"><div><p className="eyebrow">CURSO · {program.units.length} UNIDADES</p><h1>{program.title}</h1><p className="welcome-copy">{program.catalog.description}</p></div><button className="button-secondary" onClick={() => navigate('planner')}>Abrir calendário <span>→</span></button></div><section className="generic-progress-card" aria-label="Progresso deste curso"><div><small>PROGRESSO NESTE NAVEGADOR</small><strong>{practicedUnits} de {program.units.length} unidades praticadas</strong><span>{sessions} sessões registradas · {completion}% do conteúdo iniciado</span></div><div className="generic-progress-track"><i style={{ width: `${completion}%` }} /></div></section><div className="catalog-card"><div className="course-list-section"><div className="section-heading"><div><p className="eyebrow">CONTEÚDO</p><h2>Unidades de estudo</h2></div><span className="count-pill">{program.units.length} itens</span></div><div className="course-list">{program.units.map((unit) => <button className="course-row" key={unit.id} onClick={() => openProgramUnit(program, unit)}><span className="course-index">{String(unit.level ?? 0).padStart(2, '0')}</span><span className="course-row-body"><strong>{unit.title}</strong><span>{unit.details}</span></span><span aria-hidden="true">↗</span></button>)}</div></div></div></section>;
+        })()}
         {view === 'python' && <section className="python-course-host" aria-label="Curso de Python">
           <iframe ref={pythonFrameRef} className="python-course-frame" src={pythonFrameSrc || '/python-course/index.html?embed=1'} title="PyNeuro Evolution — curso de Python" sandbox="allow-scripts allow-downloads" referrerPolicy="no-referrer" />
         </section>}
@@ -215,7 +293,7 @@ function App() {
         {view === 'practice' && <Practice courses={courses} initialCourseId={practiceCourseId} initialBranchIndex={practiceTarget?.branchIndex} initialTopic={practiceTarget?.topic} onOpenCourse={chooseCourse} onStartReview={(course) => { setStudyCourseId(course.id); navigate('study'); }} />}
         {view === 'planner' && <Planner courses={courses} onStartPractice={startPractice} onStartReview={(course) => { setStudyCourseId(course.id); navigate('study'); }} onOpenProgram={(programId, unit) => {
           if (programId === 'python-profissional') openPythonCourse(unit.level);
-          else { const selectedProgram = getStudyProgram(programId); setUnitTarget({ programTitle: selectedProgram?.title ?? 'Curso', unit }); setView('unit'); setQuery(''); setMoreOpen(false); }
+          else { const selectedProgram = getStudyProgram(programId); if (selectedProgram) openProgramUnit(selectedProgram, unit); }
         }} />}
         {view === 'unit' && unitTarget && <section className="generic-unit-page"><p className="eyebrow">{unitTarget.programTitle}</p><h1>{unitTarget.unit.title}</h1><p className="welcome-copy">Conteúdo direcionado pelo calendário adaptativo.</p><article className="generic-unit-card"><h2>Foco desta sessão</h2><p>{unitTarget.unit.details || 'Use a unidade registrada no curso como roteiro de leitura e prática.'}</p><h3>Como estudar este conteúdo</h3><ol><li>Leia procurando explicar a ideia central com suas próprias palavras.</li><li>Feche o material e recupere os pontos principais sem consultar.</li><li>Crie um exemplo e teste onde a explicação deixa de funcionar.</li><li>Registre uma dúvida ou erro para orientar a próxima revisão.</li></ol></article><button className="button-secondary" onClick={() => navigate('planner')}>← Voltar ao calendário</button></section>}
         {view === 'study' && <Study courses={courses} initialCourseId={studyCourseId} onOpenCourse={chooseCourse} />}
@@ -229,19 +307,19 @@ function App() {
           <div className="content-grid"><div>{courseList('Disciplinas e componentes', courses)}</div><aside className="right-rail"><div className="focus-card"><div className="card-topline"><span className={'kind-tag ' + kindClass[activeCourse.kind]}>{kindLabel[activeCourse.kind]}</span></div><p className="eyebrow">CONTINUE SEU APRENDIZADO</p><h3>{activeCourse.title}</h3><p className="focus-summary">{activeCourse.prerequisites}</p><div className="focus-meta"><span>▦ {activeCourse.module ? 'Módulo ' + activeCourse.module : 'Conteúdo transversal'}</span></div><button className="button-primary full" onClick={() => chooseCourse(activeCourse)}>Retomar disciplina <span>→</span></button></div><div className="micro-tip"><span className="tip-icon">✦</span><div><strong>Aprenda fazendo</strong><p>Depois de estudar um ramo, feche o material e explique a ideia com suas palavras.</p></div></div></aside></div>
         </>}
         {view === 'map' && <>
-          <div className="page-title-row"><div><p className="eyebrow">MAPA MENTAL INTERATIVO</p><h1>{activeCourse.title}</h1><p className="welcome-copy">Selecione um ramo ou tópico para abrir seu foco de estudo.</p></div><button className="button-secondary" onClick={() => setView('catalog')}>Ver todas as disciplinas <span>→</span></button></div>
+          <div className="page-title-row"><div><p className="eyebrow">MAPA MENTAL INTERATIVO</p><h1>{activeCourse.title}</h1><p className="welcome-copy">Selecione um ramo ou tópico para abrir seu foco de estudo.</p></div><button className="button-secondary" onClick={() => navigate('catalog')}>Ver todas as disciplinas <span>→</span></button></div>
           <div className="map-meta"><span className={'kind-tag ' + kindClass[activeCourse.kind]}>{kindLabel[activeCourse.kind]}</span><span>Disciplina selecionada</span><span className="recommended-label">CONTEÚDO DE APRENDIZAGEM</span></div>
           <div className="map-layout"><div className="map-area"><svg className="map-connectors" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path className="connectors-wide" d="M50 17 V29 M50 29 L12.5 43 M50 29 L37.5 43 M50 29 L62.5 43 M50 29 L87.5 43" /><path className="connectors-compact" d="M50 17 V28 M50 28 L25 39 M50 28 L75 39 M25 39 V72 M75 39 V72" /></svg><div className="map-center"><span className="map-center-orbit"></span><span className="map-center-inner">TI</span><strong>{activeCourse.title}</strong><small>IDEIA CENTRAL</small></div>
             <div className="branch-grid">{activeCourse.branches.map((branch, index) => {
               const branchState = getBranchLearningState(activeCourse, index);
               const stateLabel = branchState === 'verified' ? 'Verificado' : branchState === 'review' ? 'Retomar' : branchState === 'applied' ? 'Aplicado' : branchState === 'learning' ? 'Em estudo' : 'Novo';
-              return <button key={branch.id} aria-pressed={focusBranch === index} className={'branch-card branch-' + index + (focusBranch === index ? ' branch-selected' : '')} onClick={() => { setFocusBranch(index); setFocusTopic(''); setPracticeGateChecked(false); }}><span className="branch-number">0{index + 1}</span><span className={'branch-status state-' + branchState}>{stateLabel}</span><strong>{branchNames[index] ?? branch.title}</strong><span className="branch-description">{branch.topics.slice(0, 3).join(' · ')}</span><span className="branch-count">{branch.topics.length} conceitos <b>↗</b></span></button>;
+              return <button key={branch.id} aria-pressed={focusBranch === index} className={'branch-card branch-' + index + (focusBranch === index ? ' branch-selected' : '')} onClick={() => { writeBrowserRoute({ view: 'map', courseId: activeId, branchIndex: index }, 'replace'); setFocusBranch(index); setFocusTopic(''); setPracticeGateChecked(false); }}><span className="branch-number">0{index + 1}</span><span className={'branch-status state-' + branchState}>{stateLabel}</span><strong>{branchNames[index] ?? branch.title}</strong><span className="branch-description">{branch.topics.slice(0, 3).join(' · ')}</span><span className="branch-count">{branch.topics.length} conceitos <b>↗</b></span></button>;
             })}</div>
             <div className="map-legend"><span><i className="legend-grade"></i> Dados da grade</span><span><i className="legend-recommendation"></i> Conteúdo recomendado</span></div>
           </div><aside className="map-detail"><p className="eyebrow">RAMO EM FOCO</p><h2>{branchNames[focusBranch] ?? selectedBranch.title}</h2><p className="detail-intro">Escolha um conceito para direcionar a leitura e a revisão.</p>
-            <div className="topic-list">{selectedBranch.topics.map((topic, index) => <button key={topic + index} aria-pressed={selectedTopic === topic} className={'topic-chip ' + (selectedTopic === topic ? 'topic-active' : '')} onClick={() => { setFocusTopic(topic); setPracticeGateChecked(false); }}><span>{String(index + 1).padStart(2, '0')}</span>{topic}</button>)}</div>
+            <div className="topic-list">{selectedBranch.topics.map((topic, index) => <button key={topic + index} aria-pressed={selectedTopic === topic} className={'topic-chip ' + (selectedTopic === topic ? 'topic-active' : '')} onClick={() => { writeBrowserRoute({ view: 'map', courseId: activeId, branchIndex: focusBranch, topic }, 'replace'); setFocusTopic(topic); setPracticeGateChecked(false); }}><span>{String(index + 1).padStart(2, '0')}</span>{topic}</button>)}</div>
             <section id="concept-study-content" className="concept-study-card" aria-labelledby="concept-study-title">
-              <div className="concept-study-heading"><p className="eyebrow">CONTEÚDO DO CONCEITO · {selectedBranch.title}</p><h3 id="concept-study-title">{selectedTopic}</h3></div>
+              <div className="concept-study-heading"><p className="eyebrow">CONTEÚDO DO CONCEITO · {selectedBranch.title}</p><h3 id="concept-study-title">{selectedTopic}</h3><span className={'concept-study-origin origin-' + selectedConcept.origin}>{selectedConcept.origin === 'course-specific' ? 'CONTEÚDO ESPECÍFICO DA DISCIPLINA' : selectedConcept.origin === 'curated' ? 'BASE CONCEITUAL' : 'EXPLICAÇÃO CONTEXTUALIZADA'}</span></div>
               <div className="concept-study-block"><small>O QUE SIGNIFICA</small><p>{selectedConcept.explanation}</p></div>
               <div className="concept-study-grid"><article><small>EXEMPLO APLICADO</small><p>{selectedConcept.example}</p></article><article><small>RECUPERE DA MEMÓRIA</small><p>{selectedConcept.recallPrompt}</p></article></div>
               <div className="concept-memory-cue"><small>GANCHO DE MEMÓRIA</small><span>{selectedConcept.memoryCue}</span></div>

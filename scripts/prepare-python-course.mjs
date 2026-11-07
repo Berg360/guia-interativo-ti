@@ -1,4 +1,4 @@
-import { access, cp, mkdir } from 'node:fs/promises';
+import { access, cp, mkdir, readdir, rm } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
@@ -29,6 +29,20 @@ if (await exists(chartSource)) await cp(chartSource, resolve(vendor, 'chart.umd.
 else if (!(await exists(resolve(vendor, 'chart.umd.js')))) throw new Error('Chart.js não está instalado e o arquivo local não foi encontrado. Execute npm.cmd install.');
 
 const pyodideSource = resolve(root, 'node_modules/pyodide');
-if (await exists(pyodideSource)) await cp(pyodideSource, resolve(vendor, 'pyodide'), { recursive: true, force: true });
-else if (!(await exists(resolve(vendor, 'pyodide/pyodide.js')))) throw new Error('Pyodide não está instalado e os arquivos locais não foram encontrados. Execute npm.cmd install.');
+const pyodideTarget = resolve(vendor, 'pyodide');
+const pyodideRuntimeFiles = ['README.md', 'pyodide.js', 'pyodide.asm.js', 'pyodide.asm.wasm', 'python_stdlib.zip', 'pyodide-lock.json'];
+if (await exists(pyodideSource)) {
+  await mkdir(pyodideTarget, { recursive: true });
+  for (const name of pyodideRuntimeFiles) {
+    const source = resolve(pyodideSource, name);
+    if (!(await exists(source))) throw new Error(`Arquivo necessário do Pyodide não encontrado: ${name}.`);
+    await cp(source, resolve(pyodideTarget, name), { force: true });
+  }
+  const allowedFiles = new Set(pyodideRuntimeFiles);
+  for (const name of await readdir(pyodideTarget)) {
+    if (!allowedFiles.has(name)) await rm(resolve(pyodideTarget, name), { recursive: true, force: true });
+  }
+} else if (!(await exists(resolve(pyodideTarget, 'pyodide.js')))) {
+  throw new Error('Pyodide não está instalado e os arquivos locais não foram encontrados. Execute npm.cmd install.');
+}
 console.log('Recursos offline do curso de Python preparados.');

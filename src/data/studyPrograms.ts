@@ -13,6 +13,11 @@ export type StudyProgram = {
   title: string;
   kind: 'curriculum' | 'python' | 'generic';
   description: string;
+  catalog: {
+    description: string;
+    metric: string;
+    mark: string;
+  };
   units: StudyUnit[];
   storageKeys: string[];
 };
@@ -56,6 +61,11 @@ export const studyPrograms: StudyProgram[] = [
     title: 'Gestão da Tecnologia da Informação',
     kind: 'curriculum',
     description: 'Agenda por disciplina, adaptada às revisões e atividades pendentes.',
+    catalog: {
+      description: 'Desenvolva conhecimentos de tecnologia, dados, serviços digitais e gestão com estudo guiado e prática.',
+      metric: 'disciplinas e componentes',
+      mark: 'Nexo',
+    },
     units: courses.map((course) => ({ id: course.id, title: course.title, details: course.practice, course })),
     storageKeys: [
       'trilha-ti-reviews-v1',
@@ -71,6 +81,11 @@ export const studyPrograms: StudyProgram[] = [
     title: 'Python Profissional · PyNeuro Evolution',
     kind: 'python',
     description: 'Agenda por nível, adaptada ao domínio e aos cartões de revisão vencidos.',
+    catalog: {
+      description: 'Trilha prática com laboratório executável, projetos, revisão espaçada e evidências de domínio.',
+      metric: 'níveis · 8 áreas de aprendizagem',
+      mark: 'Py',
+    },
     units: pythonUnits,
     storageKeys: [PYTHON_STATE_KEY, PYTHON_BACKUP_KEY],
   },

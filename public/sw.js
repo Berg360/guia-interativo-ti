@@ -1,7 +1,9 @@
-const CACHE_NAME = 'nexo-cursos-v3';
+const CACHE_NAME = 'nexo-cursos-v4';
 const APP_SHELL = [
   '/', '/index.html', '/manifest.webmanifest', '/marca.svg',
   '/python-course/index.html',
+  '/python-course/course.css',
+  '/python-course/course.js',
   '/python-course/vendor/tailwind.css',
   '/python-course/vendor/chart.umd.js',
 ];

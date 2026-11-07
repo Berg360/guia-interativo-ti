@@ -9,6 +9,7 @@ import {
   type StudyProgram,
   type StudyUnit,
 } from './data/studyPrograms';
+import { readStoredValue, writeStoredValue } from './data/storage.js';
 
 type SessionRecord = { date: string; unitId: string; completedAt: string };
 type CalendarPlan = { goalMinutes: number; weekdays: number[]; completedDates: string[]; assignedUnits: Record<string, string>; history: SessionRecord[] };
@@ -25,7 +26,7 @@ function parseObject<T>(raw: string | null, fallback: T): T {
   try { return raw ? { ...fallback, ...JSON.parse(raw) } as T : fallback; } catch { return fallback; }
 }
 function readPlan(programId: string): CalendarPlan {
-  const raw = localStorage.getItem(programCalendarKey(programId)) ?? (programId === 'gestao-ti' ? localStorage.getItem(LEGACY_PLAN_KEY) : null);
+  const raw = readStoredValue(programCalendarKey(programId)) ?? (programId === 'gestao-ti' ? readStoredValue(LEGACY_PLAN_KEY) : null);
   const value = parseObject<CalendarPlan>(raw, DEFAULT_PLAN);
   const goal = [15, 25, 40, 60].includes(Number(value.goalMinutes)) ? Number(value.goalMinutes) : DEFAULT_PLAN.goalMinutes;
   const weekdays = Array.isArray(value.weekdays) ? value.weekdays.map(Number).filter((day) => Number.isInteger(day) && day >= 0 && day <= 6) : DEFAULT_PLAN.weekdays;
@@ -48,13 +49,13 @@ function dueForCourse(course: Course, reviews: Record<string, ReviewRecord>, now
 }
 function parsePythonState() {
   try {
-    const raw = localStorage.getItem('pyneuro_evolution_state_v2');
+    const raw = readStoredValue('pyneuro_evolution_state_v2');
     const value = raw ? JSON.parse(raw) : null;
     return value && value.version === 2 ? value : null;
   } catch { return null; }
 }
 function getFocuses(program: StudyProgram, courses: Course[], progress: Record<string, UnitProgress>, now: number, today: Date): Focus[] {
-  const reviewMap = parseObject<Record<string, ReviewRecord>>(localStorage.getItem(REVIEW_KEY), {});
+  const reviewMap = parseObject<Record<string, ReviewRecord>>(readStoredValue(REVIEW_KEY), {});
   const todayIso = dateKey(today);
   const python = program.kind === 'python' ? parsePythonState() : null;
   return program.units.map((unit) => {
@@ -63,7 +64,7 @@ function getFocuses(program: StudyProgram, courses: Course[], progress: Record<s
     if (unit.course) {
       due = dueForCourse(unit.course, reviewMap, now, today.getTime());
       total = unit.course.branches.reduce((sum, branch) => sum + branch.topics.length, 0);
-      const missed = Object.values(parseObject<Record<string, { rating?: string }>>(localStorage.getItem('trilha-ti-practice-v1'), {})).length;
+      const missed = Object.values(parseObject<Record<string, { rating?: string }>>(readStoredValue('trilha-ti-practice-v1'), {})).length;
       score = (due / Math.max(1, total)) * 8 + (previous.sessions === 0 ? 1.5 : 0);
       reason = due ? `${due} conceito(s) novo(s) ou vencido(s) na revisão` : `Reforce a retenção; ${missed ? 'há prática registrada na trilha' : 'prática e recuperação ativa recomendadas'}`;
     } else if (program.kind === 'python' && unit.level && python) {
@@ -96,12 +97,12 @@ type PlannerProps = {
 
 export function Planner({ courses, onStartReview, onStartPractice, onOpenProgram }: PlannerProps) {
   const [selection, setSelection] = useState(() => {
-    const storedId = (() => { try { return localStorage.getItem(SELECTED_PROGRAM_KEY); } catch { return null; } })();
+    const storedId = readStoredValue(SELECTED_PROGRAM_KEY);
     const initialId = studyPrograms.some((item) => item.id === storedId) ? storedId! : (studyPrograms[0]?.id ?? 'gestao-ti');
     return { programId: initialId, plan: readPlan(initialId) };
   });
   const program = getStudyProgram(selection.programId) ?? studyPrograms[0];
-  const [unitProgress, setUnitProgress] = useState<Record<string, UnitProgress>>(() => parseObject(localStorage.getItem(programProgressKey(program.id)), {}));
+  const [unitProgress, setUnitProgress] = useState<Record<string, UnitProgress>>(() => parseObject(readStoredValue(programProgressKey(program.id)), {}));
   const plan = selection.plan;
   const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
   const focusList = useMemo(() => getFocuses(program, courses, unitProgress, Date.now(), todayStart), [program, courses, unitProgress, plan.history]);
@@ -110,16 +111,16 @@ export function Planner({ courses, onStartReview, onStartPractice, onOpenProgram
   const weeklyCompleted = scheduled.filter((date) => plan.completedDates.includes(dateKey(date))).length;
 
   useEffect(() => {
-    try { localStorage.setItem(programCalendarKey(selection.programId), JSON.stringify(selection.plan)); } catch { /* O calendário segue disponível nesta sessão. */ }
+    writeStoredValue(programCalendarKey(selection.programId), JSON.stringify(selection.plan));
   }, [selection]);
   useEffect(() => {
-    try { localStorage.setItem(programProgressKey(program.id), JSON.stringify(unitProgress)); } catch { /* O progresso segue disponível nesta sessão. */ }
+    writeStoredValue(programProgressKey(program.id), JSON.stringify(unitProgress));
   }, [program.id, unitProgress]);
 
   function changeProgram(programId: string) {
-    try { localStorage.setItem(SELECTED_PROGRAM_KEY, programId); } catch { /* A seleção permanece nesta sessão. */ }
+    writeStoredValue(SELECTED_PROGRAM_KEY, programId);
     setSelection({ programId, plan: readPlan(programId) });
-    setUnitProgress(parseObject(localStorage.getItem(programProgressKey(programId)), {}));
+    setUnitProgress(parseObject(readStoredValue(programProgressKey(programId)), {}));
   }
   function updatePlan(change: (current: CalendarPlan) => CalendarPlan) {
     setSelection((current) => ({ ...current, plan: change(current.plan) }));

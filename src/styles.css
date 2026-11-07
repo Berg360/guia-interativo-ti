@@ -4,16 +4,25 @@
   background: #f6f7fb;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  --nexo-primary: #6558f5;
+  --nexo-primary-strong: #5143dd;
+  --nexo-cyan: #22b8cf;
+  --nexo-lime: #c8f169;
+  --nexo-coral: #ff786f;
+  --nexo-canvas: #f6f7fb;
+  --nexo-surface: #ffffff;
+  --nexo-ink: #171a2b;
+  --nexo-muted: #667085;
   --ink: #171a2b;
   --muted: #667085;
   --forest: #171c36;
-  --green: #6558f5;
+  --green: var(--nexo-primary);
   --mint: #efedff;
   --paper: #ffffff;
   --line: #e7e9f2;
-  --orange: #ff786f;
-  --purple: #22b8cf;
-  --lime: #c8f169;
+  --orange: var(--nexo-coral);
+  --purple: var(--nexo-cyan);
+  --lime: var(--nexo-lime);
   --surface-soft: #f1f3fb;
   --shadow: 0 16px 44px rgba(30, 35, 73, .09);
 }
@@ -21,22 +30,25 @@
 body { margin: 0; min-width: 320px; min-height: 100vh; background: #f6f7fb; }
 button, input { font: inherit; }
 button { color: inherit; }
-button:focus-visible, a:focus-visible, input:focus-visible { outline: 3px solid #22b8cf; outline-offset: 3px; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible, summary:focus-visible { outline: 3px solid var(--nexo-cyan); outline-offset: 3px; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
 .app-shell { min-height: 100vh; }
-.sidebar { position: fixed; inset: 0 auto 0 0; z-index: 5; width: 250px; padding: 27px 18px 20px; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(196, 222, 204, .42) transparent; color: #e8f0eb; background: var(--forest); }
+.sidebar { position: fixed; inset: 0 auto 0 0; z-index: 5; width: 250px; padding: 27px 18px 20px; display: flex; flex-direction: column; overflow-x: hidden; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; scrollbar-color: rgba(215, 215, 255, .42) transparent; color: #eef0ff; background: var(--forest); }
 .sidebar::-webkit-scrollbar { width: 8px; }
 .sidebar::-webkit-scrollbar-track { background: transparent; }
-.sidebar::-webkit-scrollbar-thumb { border: 2px solid var(--forest); border-radius: 20px; background: rgba(196, 222, 204, .42); }
-.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(196, 222, 204, .7); }
+.sidebar::-webkit-scrollbar-thumb { border: 2px solid var(--forest); border-radius: 20px; background: rgba(215, 215, 255, .42); }
+.sidebar::-webkit-scrollbar-thumb:hover { background: rgba(215, 215, 255, .72); }
 .brand-lockup { height: 54px; display: flex; align-items: center; gap: 11px; margin: 0 6px 37px; }
 .brand-mark { width: 38px; height: 38px; border-radius: 13px; display: grid; place-content: center; font: 800 19px Manrope, sans-serif; letter-spacing: -2px; color: var(--forest); background: #d8ebdc; }
 .brand-mark span { color: var(--orange); }
 .brand-lockup strong { display: block; font: 800 18px Manrope, sans-serif; letter-spacing: -.7px; }
-.brand-lockup strong span, .platform-brand span { color: #a3cfb4; }
+.brand-lockup strong span, .platform-brand span { color: var(--nexo-lime); }
 .brand-lockup small { display: block; margin-top: 2px; color: #98b1a5; font-size: 8px; letter-spacing: 1.15px; }
 .side-link { width: 100%; height: 43px; display: flex; align-items: center; gap: 12px; padding: 0 12px; margin: 0 0 24px; text-align: left; border: 0; border-radius: 10px; color: #c2d3ca; background: transparent; cursor: pointer; font-size: 12px; }
 .side-link:hover, .side-link.active { color: #fff; background: rgba(255,255,255,.105); }
-.side-symbol { width: 17px; text-align: center; font-size: 17px; color: #a9cdb7; }
+.side-symbol { width: 17px; text-align: center; font-size: 17px; color: #a9a0ff; }
 .side-label { margin: 0 12px 12px; color: #8ca99a; font-size: 9px; font-weight: 700; letter-spacing: 1.2px; }
 .side-label-spaced { margin-top: 29px; }
 .sidebar-bottom { margin-top: auto; }
@@ -946,6 +958,19 @@ h1, h2, h3 { font-family: Manrope, 'Segoe UI', sans-serif; }
 .concept-study-heading { margin-bottom: 12px; }
 .concept-study-heading .eyebrow { margin-bottom: 5px; color: #6558f5; font-size: 9px; line-height: 1.5; }
 .concept-study-heading h3 { margin: 0; color: #23263a; font: 750 20px/1.25 Manrope, 'Segoe UI', sans-serif; letter-spacing: -.35px; }
+.concept-study-origin { display: inline-flex; width: fit-content; padding: 4px 8px; margin-top: 8px; border: 1px solid #e0ddff; border-radius: 999px; color: #5143dd; background: #f4f2ff; font-size: 9px; font-weight: 800; letter-spacing: .55px; }
+.concept-study-origin.origin-course-specific { border-color: #b9e8d5; color: #147a57; background: #effaf5; }
+.concept-study-origin.origin-contextualized { border-color: #bdeaf0; color: #087889; background: #effbfd; }
+.generic-program-page { display: grid; gap: 20px; }
+.generic-program-page .course-row-body > span { max-width: 620px; white-space: normal; line-height: 1.5; }
+.generic-program-page .course-row { min-height: 70px; }
+.generic-progress-card { display: grid; gap: 12px; padding: 17px 19px; border: 1px solid #e1defe; border-radius: 15px; background: linear-gradient(115deg, #f5f3ff, #f2fcfd); }
+.generic-progress-card > div:first-child { display: grid; gap: 4px; }
+.generic-progress-card small { color: #6558f5; font-size: 9px; font-weight: 800; letter-spacing: .8px; }
+.generic-progress-card strong { color: #252840; font-size: 15px; }
+.generic-progress-card span { color: #667085; font-size: 11px; }
+.generic-progress-track { height: 7px; overflow: hidden; border-radius: 99px; background: #e5e7ef; }
+.generic-progress-track i { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #6558f5, #22b8cf); transition: width .2s ease; }
 .concept-study-block, .concept-study-grid article { padding: 12px; border: 1px solid #ecebf7; border-radius: 11px; background: #fff; }
 .concept-study-block > small, .concept-study-grid article > small, .concept-memory-cue > small { color: #5143dd; font-size: 9px; font-weight: 800; letter-spacing: .8px; }
 .concept-study-block p, .concept-study-grid article p { margin: 7px 0 0; color: #4f586d; font-size: 13px; line-height: 1.7; }
