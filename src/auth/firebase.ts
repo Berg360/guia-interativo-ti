@@ -35,6 +35,9 @@ export async function getFirebaseAuth(): Promise<Auth | null> {
 export async function getFirebaseDb(): Promise<Firestore | null> {
   const app = await getFirebaseApp();
   if (!app) return null;
-  const { getFirestore } = await import('firebase/firestore');
-  return getFirestore(app);
+  const { getFirestore, initializeFirestore } = await import('firebase/firestore');
+  // Enterprise projects may use a named database. Preserve the default
+  // database behavior when no explicit database ID is configured.
+  const databaseId = import.meta.env.VITE_FIREBASE_DATABASE_ID?.trim();
+  return databaseId ? initializeFirestore(app, {}, databaseId) : getFirestore(app);
 }
