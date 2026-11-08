@@ -71,3 +71,9 @@ test('calendário, rascunhos, mapa e links diretos estão conectados', () => {
   assert.ok(courseCss.includes('.roadmap-grid'));
   assert.ok(serviceWorker.includes('nexo-cursos-v6'));
 });
+
+test('a ajuda de backup explica sincronização na nuvem, uso offline e restauração', () => {
+  assert.ok(courseHtml.includes('sincronizadas na nuvem'));
+  assert.ok(courseHtml.includes('Sem conexão, continuam salvas aqui'));
+  assert.ok(courseHtml.includes('exportar e restaurar uma cópia do progresso'));
+});
