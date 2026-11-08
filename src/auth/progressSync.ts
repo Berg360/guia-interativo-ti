@@ -23,10 +23,50 @@ export type CloudProgressStatus = 'unconfigured' | 'signed-out' | 'syncing' | 's
 type ProgressStorageChange = { key: string; value: string | null };
 type CloudProgressRecord = { key: string; value: string | null; updatedAtMs: number };
 type PendingChanges = Record<string, number>;
+type ProgressStep = (phase: string, completed: number, total: number) => void;
 
 const CHUNK_LENGTH = 180_000;
 const MAX_VALUE_LENGTH = 20_000_000;
 const SCHEMA_VERSION = 2;
+const CLOUD_VERSION_PREFIX = 'nexo-cloud-versions-v1:';
+const MAX_PARALLEL_RECORDS = 4;
+const MAX_PARALLEL_PARTS = 12;
+const MAX_PARALLEL_WRITES = 4;
+
+async function mapWithConcurrency<T, R>(items: T[], limit: number, task: (item: T, index: number) => Promise<R>): Promise<R[]> {
+  const results = new Array<R>(items.length);
+  let nextIndex = 0;
+  let failed = false;
+  let failure: unknown;
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (nextIndex < items.length && !failed) {
+      const index = nextIndex;
+      nextIndex += 1;
+      try { results[index] = await task(items[index], index); }
+      catch (error) { failed = true; failure = error; }
+    }
+  }));
+  if (failed) throw failure;
+  return results;
+}
+
+function readCloudVersions(uid: string): Record<string, number> {
+  try {
+    const parsed = JSON.parse(getStorage()?.getItem(`${CLOUD_VERSION_PREFIX}${uid}`) ?? '{}');
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return {};
+    return Object.fromEntries(Object.entries(parsed).filter(([, value]) => Number.isFinite(value) && Number(value) >= 0)) as Record<string, number>;
+  } catch { return {}; }
+}
+
+function writeCloudVersion(uid: string, key: string, updatedAtMs: number) {
+  try {
+    const storage = getStorage();
+    if (!storage) return;
+    const versions = readCloudVersions(uid);
+    versions[key] = updatedAtMs;
+    storage.setItem(`${CLOUD_VERSION_PREFIX}${uid}`, JSON.stringify(versions));
+  } catch { /* A versão é só uma otimização; a sincronização continua sem esse cache. */ }
+}
 
 function errorCode(error: unknown) {
   return typeof error === 'object' && error && 'code' in error ? String(error.code).toLowerCase() : '';
@@ -131,27 +171,48 @@ function splitValue(value: string) {
   return chunks.length ? chunks : [''];
 }
 
-async function readCloudRecord(db: Firestore, uid: string, key: string): Promise<CloudProgressRecord | null> {
-  const reference = progressDocument(db, uid, key);
-  const snapshot = await getDoc(reference);
-  if (!snapshot.exists()) return null;
-  const metadata = snapshot.data();
+async function readCloudRecord(db: Firestore, uid: string, key: string, knownMetadata?: Record<string, unknown>): Promise<CloudProgressRecord | null> {
+  let metadata = knownMetadata;
+  if (!metadata) {
+    const snapshot = await getDoc(progressDocument(db, uid, key));
+    if (!snapshot.exists()) return null;
+    metadata = snapshot.data();
+  }
   if (metadata.key !== key) throw new Error('Um registro da nuvem não corresponde à chave de progresso solicitada.');
-  if (metadata.deleted === true) return { key, value: null, updatedAtMs: Number(metadata.updatedAtMs) || 0 };
+  const updatedAtMs = Number(metadata.updatedAtMs) || 0;
+  if (metadata.deleted === true) return { key, value: null, updatedAtMs };
   const partCount = Number(metadata.partCount);
   if (!Number.isInteger(partCount) || partCount < 1 || partCount > 256) throw new Error(`O registro “${key}” está em um formato inválido na nuvem.`);
-  const parts = await Promise.all(Array.from({ length: partCount }, (_, index) =>
-    getDoc(progressPartDocument(db, uid, key, index))));
+  const parts = await mapWithConcurrency(Array.from({ length: partCount }, (_, index) => index), MAX_PARALLEL_PARTS, (index) =>
+    getDoc(progressPartDocument(db, uid, key, index)));
   if (parts.some((part) => !part.exists() || typeof part.data().value !== 'string')) {
     throw new Error(`Não consegui carregar todos os blocos do progresso “${key}”. Tente novamente com conexão estável.`);
   }
   const value = parts.map((part) => part.get('value') as string).join('');
-  return { key, value, updatedAtMs: Number(metadata.updatedAtMs) || 0 };
+  return { key, value, updatedAtMs };
 }
 
-async function readCloudProgress(db: Firestore, uid: string) {
-  const metadata = await getDocs(progressCollection(db, uid));
-  const records = await Promise.all(metadata.docs.map((item) => readCloudRecord(db, uid, String(item.data().key ?? ''))));
+async function readCloudProgress(db: Firestore, uid: string, local: Map<string, string>, pending: PendingChanges, onProgress: ProgressStep) {
+  const snapshot = await getDocs(progressCollection(db, uid));
+  const versions = readCloudVersions(uid);
+  let completed = 0;
+  onProgress('Conferindo progresso na nuvem', completed, snapshot.docs.length);
+  const records = await mapWithConcurrency(snapshot.docs, MAX_PARALLEL_RECORDS, async (item) => {
+    const data = item.data();
+    const key = String(data.key ?? '');
+    const updatedAtMs = Number(data.updatedAtMs) || 0;
+    const alreadyLocal = local.has(key);
+    const alreadyDeleted = data.deleted === true && !alreadyLocal;
+    if (pending[key] || (versions[key] === updatedAtMs && (alreadyLocal || alreadyDeleted))) {
+      completed += 1;
+      onProgress('Conferindo progresso na nuvem', completed, snapshot.docs.length);
+      return { key, value: local.get(key) ?? null, updatedAtMs };
+    }
+    const record = await readCloudRecord(db, uid, key, data);
+    completed += 1;
+    onProgress('Baixando progresso da nuvem', completed, snapshot.docs.length);
+    return record;
+  });
   return new Map(records.filter((item): item is CloudProgressRecord => Boolean(item)).map((item) => [item.key, item]));
 }
 
@@ -178,6 +239,7 @@ async function writeCloudValue(db: Firestore, uid: string, key: string, value: s
     deleted: value === null,
   });
   await batch.commit();
+  writeCloudVersion(uid, key, updatedAtMs);
 }
 
 export async function flushUserPendingProgress(db: Firestore, uid: string) {
@@ -207,14 +269,23 @@ export class LocalMigrationCancelledError extends Error {
   constructor() { super('A migração foi cancelada; nada foi alterado.'); this.name = 'LocalMigrationCancelledError'; }
 }
 
-async function synchronizeInitialState(db: Firestore, uid: string) {
-  const [cloud, local] = await Promise.all([readCloudProgress(db, uid), Promise.resolve(readLocalProgress())]);
+async function synchronizeInitialState(db: Firestore, uid: string, onProgress: ProgressStep) {
+  const local = readLocalProgress();
   const pending = readPending(uid);
+  const cloud = await readCloudProgress(db, uid, local, pending, onProgress);
   const hasLocalProgress = local.size > 0;
   if (cloud.size === 0 && hasLocalProgress && Object.keys(pending).length === 0) {
     const accepted = window.confirm('Encontramos progresso salvo neste navegador. Deseja transferi-lo para esta conta Google? Isso permitirá continuar em outros dispositivos.');
     if (!accepted) throw new LocalMigrationCancelledError();
-    for (const [key, value] of local) await writeCloudValue(db, uid, key, value);
+    const entries = [...local.entries()];
+    let completed = 0;
+    await mapWithConcurrency(entries, MAX_PARALLEL_WRITES, async ([key, value]) => {
+      onProgress('Enviando progresso para sua conta', completed, entries.length);
+      await writeCloudValue(db, uid, key, value);
+      if (getStorage()?.getItem(key) === value) clearPending(uid, key);
+      completed += 1;
+      onProgress('Enviando progresso para sua conta', completed, entries.length);
+    });
     emitProgressUpdated();
     return;
   }
@@ -225,16 +296,27 @@ async function synchronizeInitialState(db: Firestore, uid: string) {
     const currentLocal = getStorage()?.getItem(record.key) ?? null;
     if (observedLocal !== currentLocal) continue;
     applyCloudValue(record.key, record.value);
+    writeCloudVersion(uid, record.key, record.updatedAtMs);
   }
-  const keysToUpload = new Set([
+  const keysToUpload = [...new Set([
     ...[...local.keys()].filter((key) => !cloud.has(key)),
     ...Object.keys(readPending(uid)),
-  ]);
-  for (const key of keysToUpload) {
-    if (!isProgressStorageKey(key)) { clearPending(uid, key); continue; }
-    await writeCloudValue(db, uid, key, getStorage()?.getItem(key) ?? null);
-    clearPending(uid, key);
-  }
+  ])];
+  let completed = 0;
+  await mapWithConcurrency(keysToUpload, MAX_PARALLEL_WRITES, async (key) => {
+    onProgress('Enviando progresso para sua conta', completed, keysToUpload.length);
+    if (!isProgressStorageKey(key)) {
+      clearPending(uid, key);
+      completed += 1;
+      onProgress('Enviando progresso para sua conta', completed, keysToUpload.length);
+      return;
+    }
+    const value = getStorage()?.getItem(key) ?? null;
+    await writeCloudValue(db, uid, key, value);
+    if ((getStorage()?.getItem(key) ?? null) === value) clearPending(uid, key);
+    completed += 1;
+    onProgress('Enviando progresso para sua conta', completed, keysToUpload.length);
+  });
   emitProgressUpdated();
 }
 
@@ -250,6 +332,7 @@ export async function startProgressSync(
   let timer: number | undefined;
   let retryTimer: number | undefined;
   let retryAttempt = 0;
+  let flushRunning = false;
   let remoteUnsubscribe: Unsubscribe | undefined;
   const delayedKeys = new Set<string>();
 
@@ -273,17 +356,24 @@ export async function startProgressSync(
     remoteUnsubscribe = onSnapshot(progressCollection(db, uid), (snapshot) => {
       void (async () => {
         let changed = false;
-        const pending = readPending(uid);
-        for (const change of snapshot.docChanges()) {
-          const key = String(change.doc.data().key ?? '');
-          if (!isProgressStorageKey(key) || pending[key]) continue;
-          const record = await readCloudRecord(db, uid, key);
-          if (!record) continue;
+        const versions = readCloudVersions(uid);
+        await mapWithConcurrency(snapshot.docChanges(), MAX_PARALLEL_RECORDS, async (change) => {
+          const pending = readPending(uid);
+          const metadata = change.doc.data();
+          const key = String(metadata.key ?? '');
+          if (!isProgressStorageKey(key) || pending[key]) return;
+          const updatedAtMs = Number(metadata.updatedAtMs) || 0;
+          const localValue = getStorage()?.getItem(key) ?? null;
+          if (versions[key] === updatedAtMs && (localValue !== null || metadata.deleted === true)) return;
+          const record = await readCloudRecord(db, uid, key, metadata);
+          if (!record) return;
           const currentValue = getStorage()?.getItem(key) ?? null;
-          if (currentValue === record.value) continue;
-          applyCloudValue(key, record.value);
-          changed = true;
-        }
+          if (currentValue !== record.value) {
+            applyCloudValue(key, record.value);
+            changed = true;
+          }
+          writeCloudVersion(uid, key, record.updatedAtMs);
+        });
         if (changed) emitProgressUpdated();
         if (Object.keys(readPending(uid)).length) void flush();
         else onStatus('synced', 'Progresso sincronizado com esta conta Google.');
@@ -300,29 +390,49 @@ export async function startProgressSync(
   };
 
   const flush = async () => {
-    if (!initialized || disposed) return;
+    if (!initialized || disposed || flushRunning) return;
     if (!navigator.onLine) { onStatus('offline', 'Sem internet · as alterações ficam pendentes neste dispositivo.'); return; }
     const pending = readPending(uid);
     const keys = new Set([...Object.keys(pending), ...delayedKeys]);
     delayedKeys.clear();
     if (!keys.size) { onStatus('synced', 'Progresso sincronizado com esta conta Google.'); return; }
-    onStatus('syncing', 'Enviando seu progresso para a nuvem…');
+    flushRunning = true;
+    let completed = 0;
+    let followUp = false;
+    onStatus('syncing', `Enviando 0 de ${keys.size} atualizações…`);
     try {
-      for (const key of keys) {
-        if (!isProgressStorageKey(key)) { clearPending(uid, key); continue; }
-        await writeCloudValue(db, uid, key, getStorage()?.getItem(key) ?? null);
-        clearPending(uid, key);
-      }
-      onStatus('synced', 'Progresso sincronizado com esta conta Google.');
+      await mapWithConcurrency([...keys], MAX_PARALLEL_WRITES, async (key) => {
+        if (!isProgressStorageKey(key)) clearPending(uid, key);
+        else {
+          const value = getStorage()?.getItem(key) ?? null;
+          await writeCloudValue(db, uid, key, value);
+          if ((getStorage()?.getItem(key) ?? null) === value) clearPending(uid, key);
+          else { markPending(uid, key); followUp = true; }
+        }
+        completed += 1;
+        onStatus('syncing', `Enviando ${completed} de ${keys.size} atualizações…`);
+      });
+      const hasChanges = Object.keys(readPending(uid)).length > 0 || delayedKeys.size > 0;
+      if (hasChanges || followUp) {
+        followUp = true;
+        onStatus('syncing', 'Enviando as alterações mais recentes…');
+      } else onStatus('synced', 'Progresso sincronizado com esta conta Google.');
     } catch (error) {
       const temporary = isTemporaryConnectionError(error);
       onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Não foi possível sincronizar agora.'));
       if (temporary) scheduleRetry();
+    } finally {
+      flushRunning = false;
+      if (followUp && !disposed) {
+        window.clearTimeout(timer);
+        timer = window.setTimeout(() => { void flush(); }, 250);
+      }
     }
   };
 
   async function recoverConnection() {
     if (disposed) return;
+    if (!initialized && initializing) return;
     if (!navigator.onLine) {
       onStatus('offline', 'Sem internet · as alterações ficam pendentes neste dispositivo.');
       return;
@@ -348,7 +458,10 @@ export async function startProgressSync(
     initializing = true;
     onStatus('syncing', 'Carregando o progresso desta conta…');
     try {
-      await synchronizeInitialState(db, uid);
+      await synchronizeInitialState(db, uid, (phase, completed, total) => {
+        const progress = total > 0 ? ` (${completed}/${total})` : '';
+        onStatus('syncing', `${phase}${progress}…`);
+      });
       if (disposed) return;
       initialized = true;
       retryAttempt = 0;

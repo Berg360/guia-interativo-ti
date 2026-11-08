@@ -32,14 +32,14 @@ export function CloudAccountControl() {
 
   return <div className={`cloud-account-control cloud-${status}`} title={message}>
     <span className="cloud-status-dot" aria-hidden="true" />
-    <span className="cloud-status-copy"><strong>{statusLabels[status]}</strong><small>{user?.displayName || user?.email || (configured ? 'Progresso deste navegador' : 'Configuração pendente')}</small></span>
+    <span className="cloud-status-copy"><strong>{statusLabels[status]}</strong><small>{status === 'syncing' ? message : user?.displayName || user?.email || (configured ? 'Progresso deste navegador' : 'Configuração pendente')}</small></span>
     {user
       ? <button type="button" className="cloud-account-action" disabled={busy || loading || status === 'syncing'} onClick={() => {
         if (status === 'offline' || status === 'error') {
           setLocalError('');
           requestProgressSyncRetry();
         } else void handleSignOut();
-      }}>{busy || status === 'syncing' ? 'Aguarde…' : status === 'offline' || status === 'error' ? 'Tentar novamente' : 'Sair'}</button>
+      }}>{busy ? 'Aguarde…' : status === 'syncing' ? 'Enviando…' : status === 'offline' || status === 'error' ? 'Tentar novamente' : 'Sair'}</button>
       : <button type="button" className="cloud-account-action cloud-login-action" disabled={!configured || loading || busy} onClick={() => void handleSignIn()}>{loading || busy ? 'Aguarde…' : 'Entrar com Google'}</button>}
     {(localError || authError || status === 'error' || status === 'offline') && <span className="cloud-account-error" role="status">{localError || authError || message}</span>}
   </div>;
