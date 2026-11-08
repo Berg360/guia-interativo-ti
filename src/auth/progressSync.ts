@@ -25,6 +25,9 @@ type CloudProgressRecord = { key: string; value: string | null; updatedAtMs: num
 type PendingChanges = Record<string, number>;
 type ProgressStep = (phase: string, completed: number, total: number) => void;
 
+type InFlightCloudWrite = { value: string | null; startedAt: number; promise: Promise<void>; timedOut: boolean };
+type InFlightCloudRead = { startedAt: number; promise: Promise<unknown>; timedOut: boolean };
+
 const CHUNK_LENGTH = 180_000;
 const MAX_VALUE_LENGTH = 20_000_000;
 const SCHEMA_VERSION = 2;
@@ -32,6 +35,53 @@ const CLOUD_VERSION_PREFIX = 'nexo-cloud-versions-v1:';
 const MAX_PARALLEL_RECORDS = 4;
 const MAX_PARALLEL_PARTS = 12;
 const MAX_PARALLEL_WRITES = 4;
+const FIRESTORE_REQUEST_TIMEOUT_MS = 15_000;
+const inFlightCloudWrites = new Map<string, InFlightCloudWrite>();
+const inFlightCloudReads = new Map<string, InFlightCloudRead>();
+
+class FirestoreRequestTimeoutError extends Error {
+  code = 'unavailable';
+  constructor() {
+    super('O Firestore não respondeu em 15 segundos. O progresso segue salvo neste navegador e será sincronizado quando a conexão voltar.');
+    this.name = 'FirestoreRequestTimeoutError';
+  }
+}
+
+function waitForFirestore<T>(promise: Promise<T>, timeoutMs = FIRESTORE_REQUEST_TIMEOUT_MS): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timeout = window.setTimeout(() => reject(new FirestoreRequestTimeoutError()), timeoutMs);
+    promise.then((value) => { window.clearTimeout(timeout); resolve(value); }, (error) => { window.clearTimeout(timeout); reject(error); });
+  });
+}
+
+async function waitForCloudRead<T>(uid: string, path: string, request: () => Promise<T>): Promise<T> {
+  const key = `${uid}\u0000${path}`;
+  const existing = inFlightCloudReads.get(key);
+  if (existing) {
+    const remaining = FIRESTORE_REQUEST_TIMEOUT_MS - (Date.now() - existing.startedAt);
+    if (remaining <= 0) { existing.timedOut = true; throw new FirestoreRequestTimeoutError(); }
+    try { return await waitForFirestore(existing.promise as Promise<T>, remaining); }
+    catch (error) {
+      if (error instanceof FirestoreRequestTimeoutError) existing.timedOut = true;
+      throw error;
+    }
+  }
+
+  const operation = request();
+  const entry: InFlightCloudRead = { startedAt: Date.now(), promise: operation, timedOut: false };
+  inFlightCloudReads.set(key, entry);
+  void operation.then(() => {
+    if (inFlightCloudReads.get(key) === entry) inFlightCloudReads.delete(key);
+    if (entry.timedOut) window.dispatchEvent(new Event(PROGRESS_SYNC_RETRY_EVENT));
+  }, () => {
+    if (inFlightCloudReads.get(key) === entry) inFlightCloudReads.delete(key);
+  });
+  try { return await waitForFirestore(operation); }
+  catch (error) {
+    if (error instanceof FirestoreRequestTimeoutError) entry.timedOut = true;
+    throw error;
+  }
+}
 
 async function mapWithConcurrency<T, R>(items: T[], limit: number, task: (item: T, index: number) => Promise<R>): Promise<R[]> {
   const results = new Array<R>(items.length);
@@ -84,6 +134,7 @@ function isTemporaryConnectionError(error: unknown) {
 }
 
 function readableSyncError(error: unknown, fallback: string) {
+  if (error instanceof FirestoreRequestTimeoutError) return error.message;
   const code = errorCode(error);
   const message = errorText(error);
   if (code.includes('permission-denied') || message.includes('insufficient permissions')) {
@@ -174,7 +225,8 @@ function splitValue(value: string) {
 async function readCloudRecord(db: Firestore, uid: string, key: string, knownMetadata?: Record<string, unknown>): Promise<CloudProgressRecord | null> {
   let metadata = knownMetadata;
   if (!metadata) {
-    const snapshot = await getDoc(progressDocument(db, uid, key));
+    const reference = progressDocument(db, uid, key);
+    const snapshot = await waitForCloudRead(uid, reference.path, () => getDoc(reference));
     if (!snapshot.exists()) return null;
     metadata = snapshot.data();
   }
@@ -183,8 +235,10 @@ async function readCloudRecord(db: Firestore, uid: string, key: string, knownMet
   if (metadata.deleted === true) return { key, value: null, updatedAtMs };
   const partCount = Number(metadata.partCount);
   if (!Number.isInteger(partCount) || partCount < 1 || partCount > 256) throw new Error(`O registro “${key}” está em um formato inválido na nuvem.`);
-  const parts = await mapWithConcurrency(Array.from({ length: partCount }, (_, index) => index), MAX_PARALLEL_PARTS, (index) =>
-    getDoc(progressPartDocument(db, uid, key, index)));
+  const parts = await mapWithConcurrency(Array.from({ length: partCount }, (_, index) => index), MAX_PARALLEL_PARTS, (index) => {
+    const reference = progressPartDocument(db, uid, key, index);
+    return waitForCloudRead(uid, reference.path, () => getDoc(reference));
+  });
   if (parts.some((part) => !part.exists() || typeof part.data().value !== 'string')) {
     throw new Error(`Não consegui carregar todos os blocos do progresso “${key}”. Tente novamente com conexão estável.`);
   }
@@ -193,7 +247,8 @@ async function readCloudRecord(db: Firestore, uid: string, key: string, knownMet
 }
 
 async function readCloudProgress(db: Firestore, uid: string, local: Map<string, string>, pending: PendingChanges, onProgress: ProgressStep) {
-  const snapshot = await getDocs(progressCollection(db, uid));
+  const reference = progressCollection(db, uid);
+  const snapshot = await waitForCloudRead(uid, reference.path, () => getDocs(reference));
   const versions = readCloudVersions(uid);
   let completed = 0;
   onProgress('Conferindo progresso na nuvem', completed, snapshot.docs.length);
@@ -218,28 +273,57 @@ async function readCloudProgress(db: Firestore, uid: string, local: Map<string, 
 
 async function writeCloudValue(db: Firestore, uid: string, key: string, value: string | null) {
   if (!isProgressStorageKey(key)) return;
-  const reference = progressDocument(db, uid, key);
-  const previous = await getDoc(reference);
-  const previousCount = Math.min(256, Number(previous.data()?.partCount) || 0);
-  const batch = writeBatch(db);
-  const updatedAtMs = Date.now();
-  const chunks = value === null ? [] : splitValue(value);
-  for (let index = 0; index < chunks.length; index += 1) {
-    batch.set(progressPartDocument(db, uid, key, index), { value: chunks[index] });
+  const operationKey = `${uid}\u0000${key}`;
+  const existing = inFlightCloudWrites.get(operationKey);
+  if (existing) {
+    const remaining = FIRESTORE_REQUEST_TIMEOUT_MS - (Date.now() - existing.startedAt);
+    if (remaining <= 0) { existing.timedOut = true; throw new FirestoreRequestTimeoutError(); }
+    try { await waitForFirestore(existing.promise, remaining); }
+    catch (error) {
+      if (error instanceof FirestoreRequestTimeoutError) existing.timedOut = true;
+      throw error;
+    }
+    if (existing.value === value) return;
   }
-  for (let index = chunks.length; index < previousCount; index += 1) {
-    batch.delete(progressPartDocument(db, uid, key, index));
-  }
-  batch.set(reference, {
-    key,
-    partCount: chunks.length,
-    updatedAtMs,
-    serverUpdatedAt: serverTimestamp(),
-    schemaVersion: SCHEMA_VERSION,
-    deleted: value === null,
+
+  const operation = (async () => {
+    const reference = progressDocument(db, uid, key);
+    const previous = await getDoc(reference);
+    const previousCount = Math.min(256, Number(previous.data()?.partCount) || 0);
+    const batch = writeBatch(db);
+    const updatedAtMs = Date.now();
+    const chunks = value === null ? [] : splitValue(value);
+    for (let index = 0; index < chunks.length; index += 1) {
+      batch.set(progressPartDocument(db, uid, key, index), { value: chunks[index] });
+    }
+    for (let index = chunks.length; index < previousCount; index += 1) {
+      batch.delete(progressPartDocument(db, uid, key, index));
+    }
+    batch.set(reference, {
+      key,
+      partCount: chunks.length,
+      updatedAtMs,
+      serverUpdatedAt: serverTimestamp(),
+      schemaVersion: SCHEMA_VERSION,
+      deleted: value === null,
+    });
+    await batch.commit();
+    writeCloudVersion(uid, key, updatedAtMs);
+  })();
+  const entry: InFlightCloudWrite = { value, startedAt: Date.now(), promise: operation, timedOut: false };
+  inFlightCloudWrites.set(operationKey, entry);
+  void operation.then(() => {
+    if (inFlightCloudWrites.get(operationKey) === entry) inFlightCloudWrites.delete(operationKey);
+    if ((getStorage()?.getItem(key) ?? null) === value) clearPending(uid, key);
+    if (entry.timedOut) window.dispatchEvent(new Event(PROGRESS_SYNC_RETRY_EVENT));
+  }, () => {
+    if (inFlightCloudWrites.get(operationKey) === entry) inFlightCloudWrites.delete(operationKey);
   });
-  await batch.commit();
-  writeCloudVersion(uid, key, updatedAtMs);
+  try { await waitForFirestore(operation); }
+  catch (error) {
+    if (error instanceof FirestoreRequestTimeoutError) entry.timedOut = true;
+    throw error;
+  }
 }
 
 export async function flushUserPendingProgress(db: Firestore, uid: string) {
@@ -278,6 +362,7 @@ async function synchronizeInitialState(db: Firestore, uid: string, onProgress: P
     const accepted = window.confirm('Encontramos progresso salvo neste navegador. Deseja transferi-lo para esta conta Google? Isso permitirá continuar em outros dispositivos.');
     if (!accepted) throw new LocalMigrationCancelledError();
     const entries = [...local.entries()];
+    for (const [key] of entries) markPending(uid, key);
     let completed = 0;
     await mapWithConcurrency(entries, MAX_PARALLEL_WRITES, async ([key, value]) => {
       onProgress('Enviando progresso para sua conta', completed, entries.length);
@@ -302,6 +387,7 @@ async function synchronizeInitialState(db: Firestore, uid: string, onProgress: P
     ...[...local.keys()].filter((key) => !cloud.has(key)),
     ...Object.keys(readPending(uid)),
   ])];
+  for (const key of keysToUpload) if (isProgressStorageKey(key)) markPending(uid, key);
   let completed = 0;
   await mapWithConcurrency(keysToUpload, MAX_PARALLEL_WRITES, async (key) => {
     onProgress('Enviando progresso para sua conta', completed, keysToUpload.length);
@@ -332,6 +418,7 @@ export async function startProgressSync(
   let timer: number | undefined;
   let retryTimer: number | undefined;
   let retryAttempt = 0;
+  let recovering = false;
   let flushRunning = false;
   let remoteUnsubscribe: Unsubscribe | undefined;
   const delayedKeys = new Set<string>();
@@ -416,7 +503,10 @@ export async function startProgressSync(
       if (hasChanges || followUp) {
         followUp = true;
         onStatus('syncing', 'Enviando as alterações mais recentes…');
-      } else onStatus('synced', 'Progresso sincronizado com esta conta Google.');
+      } else {
+        retryAttempt = 0;
+        onStatus('synced', 'Progresso sincronizado com esta conta Google.');
+      }
     } catch (error) {
       const temporary = isTemporaryConnectionError(error);
       onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Não foi possível sincronizar agora.'));
@@ -431,16 +521,16 @@ export async function startProgressSync(
   };
 
   async function recoverConnection() {
-    if (disposed) return;
+    if (disposed || recovering) return;
     if (!initialized && initializing) return;
     if (!navigator.onLine) {
       onStatus('offline', 'Sem internet · as alterações ficam pendentes neste dispositivo.');
       return;
     }
+    recovering = true;
     onStatus('syncing', 'Tentando restabelecer a conexão com a nuvem…');
     try {
       await enableNetwork(db);
-      retryAttempt = 0;
       if (!initialized) await begin();
       else {
         installRemoteListener();
@@ -450,7 +540,7 @@ export async function startProgressSync(
       const temporary = isTemporaryConnectionError(error);
       onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Não foi possível retomar a sincronização.'));
       if (temporary) scheduleRetry();
-    }
+    } finally { recovering = false; }
   }
 
   const begin = async () => {
