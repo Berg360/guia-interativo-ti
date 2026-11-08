@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>PyNeuro Evolution — Plataforma Profissional de Formação e Domínio de Python</title>
+  <title>PyNeuro Evolution — Curso guiado de Python</title>
   <link rel="stylesheet" href="/python-course/vendor/tailwind.css">
   <script src="/python-course/vendor/chart.umd.js"></script>
   <script>
@@ -35,9 +35,9 @@
           <div>
             <div class="flex items-center gap-2">
               <h1 class="font-bold text-sm sm:text-base tracking-tight text-white">PyNeuro <span class="text-indigo-400 font-extrabold">Evolution</span></h1>
-              <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Zero Decoreba • 12 Níveis</span>
+              <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">Estudo guiado • 12 etapas</span>
             </div>
-            <p class="text-[11px] text-slate-400 hidden md:block">Formação Baseada em Evidências, Execução Real, Repetição Espaçada & Engenharia de Software</p>
+            <p class="text-[11px] text-slate-400 hidden md:block">Conceitos, prática de código, projetos e revisão espaçada</p>
           </div>
         </div>
 
@@ -46,14 +46,14 @@
           <div class="flex items-center gap-2.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 text-xs">
             <div>
               <div class="text-[10px] text-slate-400 font-medium flex items-center gap-1.5">
-                <span>Domínio & Métricas Reais</span>
+                <span>Progresso do curso</span>
                 <span id="study-timer-pill" class="text-indigo-400 font-mono" title="Tempo de estudo acumulado">⏱ 00:00</span>
               </div>
               <div class="text-xs font-bold text-emerald-400">
-                <span id="xp-counter">0</span> XP • <span id="completed-counter">0/12</span> Dominados • <span id="accuracy-counter" class="text-sky-400">0%</span> Acerto
+                <span id="xp-counter">0</span> XP • <span id="completed-counter">0/12</span> Etapas concluídas • <span id="accuracy-counter" class="text-sky-400">0%</span> Acertos registrados
               </div>
             </div>
-            <div class="w-16 sm:w-20 h-2 bg-slate-800 rounded-full overflow-hidden" aria-label="Barra de progresso de domínio">
+            <div class="w-16 sm:w-20 h-2 bg-slate-800 rounded-full overflow-hidden" aria-label="Barra de progresso das etapas">
               <div id="header-progress-bar" class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-300" style="width: 0%"></div>
             </div>
           </div>
@@ -151,16 +151,16 @@
     <nav id="course-nav" class="course-nav" role="navigation" aria-label="Áreas do curso">
       <div class="course-nav-group"><p class="course-nav-label">ESTUDE</p>
         <button id="tab-btn-trilha" data-label="Trilha & Aulas" onclick="switchView('trilha')" class="nav-tab nav-link is-active" aria-current="page"><span class="nav-link-icon">🗺️</span><span class="nav-link-copy">Trilha & Aulas</span></button>
-        <button id="tab-btn-lab" data-label="Simulador Mental" onclick="switchView('lab')" class="nav-tab nav-link"><span class="nav-link-icon">🔬</span><span class="nav-link-copy">Simulador Mental</span></button>
+        <button id="tab-btn-lab" data-label="Simulador passo a passo" onclick="switchView('lab')" class="nav-tab nav-link"><span class="nav-link-icon">🔬</span><span class="nav-link-copy">Simulador passo a passo</span></button>
         <button id="tab-btn-python-lab" data-label="Laboratório Python" onclick="switchView('python-lab')" class="nav-tab nav-link"><span class="nav-link-icon">💻</span><span class="nav-link-copy">Laboratório Python</span></button>
       </div>
       <div class="course-nav-group"><p class="course-nav-label">REVISE</p>
         <button id="tab-btn-srs" data-label="Revisão Espaçada" onclick="switchView('srs')" class="nav-tab nav-link"><span class="nav-link-icon">🧠</span><span class="nav-link-copy">Revisão Espaçada</span><span id="srs-badge" class="px-1.5 py-0.2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full text-[10px] font-bold">18</span></button>
-        <button id="tab-btn-metodo" data-label="Cronograma 1-3-7-21" onclick="switchView('metodo')" class="nav-tab nav-link"><span class="nav-link-icon">📅</span><span class="nav-link-copy">Cronograma 1-3-7-21</span></button>
+        <button id="tab-btn-metodo" data-label="Calendário de Estudos" onclick="switchView('metodo')" class="nav-tab nav-link"><span class="nav-link-icon">📅</span><span class="nav-link-copy">Calendário de Estudos</span></button>
       </div>
       <div class="course-nav-group"><p class="course-nav-label">APLIQUE</p>
         <button id="tab-btn-projetos" data-label="Projetos & Portfólio" onclick="switchView('projetos')" class="nav-tab nav-link"><span class="nav-link-icon">🛠️</span><span class="nav-link-copy">Projetos & Portfólio</span></button>
-        <button id="tab-btn-cheat" data-label="Mapa Visual" onclick="switchView('cheat')" class="nav-tab nav-link"><span class="nav-link-icon">🧩</span><span class="nav-link-copy">Mapa Visual</span></button>
+        <button id="tab-btn-cheat" data-label="Mapa de Aprendizagem" onclick="switchView('cheat')" class="nav-tab nav-link"><span class="nav-link-icon">🧩</span><span class="nav-link-copy">Mapa de Aprendizagem</span></button>
       </div>
       <div class="course-nav-group"><p class="course-nav-label">ACOMPANHE</p>
         <button id="tab-btn-dashboard" data-label="Dashboard" onclick="switchView('dashboard')" class="nav-tab nav-link"><span class="nav-link-icon">📊</span><span class="nav-link-copy">Dashboard</span></button>
@@ -171,39 +171,17 @@
 
     <!-- ==================== VIEW 1: TRILHA & AULAS INTERATIVAS (12 NÍVEIS + 5 DIMENSÕES) ==================== -->
     <section id="view-trilha" class="space-y-5">
-      <!-- Intro Banner with corrected pedagogical precision -->
-      <div class="bg-gradient-to-r from-indigo-950/70 via-slate-900 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 sm:p-5 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
-        <div class="space-y-1.5 max-w-3xl">
-          <div class="inline-flex items-center gap-2 text-xs font-semibold text-amber-300 bg-amber-500/10 border border-amber-500/30 px-2.5 py-0.5 rounded-full">
-            💡 Ciência Cognitiva Aplicada ao Ensino de Python
-          </div>
-          <h2 class="text-base sm:text-xl font-bold text-white">Programadores seniores não decoram comandos — eles constroem modelos mentais e resolvem problemas.</h2>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            Segundo a <strong>Curva do Esquecimento de Ebbinghaus</strong>, a retenção de sintaxe isolada (<code class="code-font text-indigo-300">.append()</code>, <code class="code-font text-indigo-300">def</code>, <code class="code-font text-indigo-300">yield</code>) cai drasticamente nos primeiros dias quando estudada de forma passiva. Para alcançar o status <strong>Dominado</strong> em cada um dos <strong>12 Níveis</strong>, você comprovará evidências em <strong>5 dimensões cognitivas</strong>: compreensão conceitual, interpretação de código, construção, depuração de erros e projeto aplicado.
-          </p>
-        </div>
-        <div class="flex flex-wrap gap-2 shrink-0">
-          <button onclick="switchView('lab')" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition shadow">
-            Abrir Simulador de Memória →
-          </button>
-          <button onclick="switchView('python-lab')" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition shadow">
-            Laboratório Python Real →
-          </button>
-          <button onclick="switchView('srs')" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition">
-            Praticar Flashcards (SRS)
-          </button>
-        </div>
-      </div>
+      <div id="course-start-panel" class="course-start-panel" aria-live="polite"></div>
 
       <!-- Main Grid: Left Level Selector (12 Levels) + Right Interactive Lesson & Competency Matrix -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         <!-- Left Sidebar: 12 Progressive Levels -->
         <aside class="lg:col-span-4 space-y-2.5" aria-label="Lista de Níveis do Currículo">
           <div class="flex items-center justify-between px-1">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Currículo Espiral (12 Níveis)</h3>
-            <span id="sidebar-mastery-summary" class="text-xs text-emerald-400 font-semibold">0/12 Dominados</span>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Trilha do curso (12 etapas)</h3>
+            <span id="sidebar-mastery-summary" class="text-xs text-emerald-400 font-semibold">0/12 concluídas</span>
           </div>
-          <div id="levels-list" class="space-y-2 max-h-[750px] overflow-y-auto pr-1"></div>
+          <div id="levels-list" class="space-y-2 pr-1"></div>
         </aside>
 
         <!-- Right Panel: Active Level Deep-Dive -->
@@ -220,10 +198,10 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-5 border-b border-slate-800">
           <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Simulador Visual de Estado, Referências, Escopo & Memória</span>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Inspecione referências a objetos, mutabilidade e stack frames linha por linha</h2>
+            <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Entenda o código linha por linha</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Execute um exemplo e observe o que muda</h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Execute passo a passo ou automaticamente para visualizar como o interpretador Python gerencia nomes (referências), objetos no Heap, escopo local/global e geradores.
+              Comece pelo cenário 1. Use os botões de passo para acompanhar valores, decisões e resultado; depois escolha outro cenário.
             </p>
           </div>
           <div class="flex flex-wrap gap-2">
@@ -313,12 +291,12 @@
             </div>
             <h2 class="text-lg sm:text-xl font-bold text-white mt-1">Laboratório de Código Python, Depuração e Validação de Exercícios</h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-0.5">
-              Escreva código Python livremente, forneça entradas (<code class="code-font">input()</code>), capture <code class="code-font">stdout</code>/<code class="code-font">stderr</code> e compare com os testes automatizados de cada nível.
+              Pratique em etapas: leia o desafio, tente sem consultar a referência, execute e compare o caso de exemplo. O resultado confirma esse caso; ele não substitui a revisão do código.
             </p>
           </div>
 
           <div class="flex flex-wrap items-center gap-2">
-            <select id="lab-exercise-select" aria-label="Selecionar exercício prático" onchange="loadLabExercise(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-medium"></select>
+            <select id="lab-exercise-select" aria-label="Selecionar exercício prático" onchange="loadLabExercise(this.value); updateCourseUrl()" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs sm:text-sm text-white font-medium"></select>
           </div>
         </div>
 
@@ -333,6 +311,14 @@
           </div>
           <p id="lab-exercise-desc" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
           <div id="lab-hint-box" class="hidden text-xs text-amber-200 bg-amber-950/40 border border-amber-500/30 rounded-lg p-2.5"></div>
+          <div class="flex flex-wrap items-center gap-2">
+            <button id="lab-show-expected-btn" onclick="toggleLabExpectedOutput()" class="hidden px-3 py-1.5 rounded-lg bg-slate-800 text-slate-200 text-sm font-medium">Ver resultado do exemplo</button>
+            <button id="lab-show-reference-btn" onclick="toggleLabReferenceSolution()" class="hidden px-3 py-1.5 rounded-lg bg-slate-800 text-amber-200 text-sm font-medium">Ver solução comentada após 2 tentativas</button>
+          </div>
+          <div id="lab-reference-box" class="hidden bg-slate-900 border border-amber-500/30 rounded-lg p-3 space-y-2">
+            <p class="text-sm text-amber-200">Solução de referência: compare a estratégia e depois feche este painel para reescrever sem copiar.</p>
+            <pre id="lab-reference-code" class="code-font text-sm text-emerald-200 whitespace-pre-wrap"></pre>
+          </div>
         </div>
 
         <!-- Editor & Output Split -->
@@ -347,7 +333,7 @@
               </div>
             </div>
 
-            <textarea id="python-code-editor" rows="13" spellcheck="false" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-4 code-font text-xs sm:text-sm text-emerald-200 leading-relaxed focus:outline-none"></textarea>
+            <textarea id="python-code-editor" rows="13" spellcheck="false" onblur="saveCurrentLabExerciseCode(true)" class="w-full bg-slate-950 border border-slate-700 focus:border-indigo-500 rounded-xl p-4 code-font text-xs sm:text-sm text-emerald-200 leading-relaxed focus:outline-none"></textarea>
 
             <!-- Simulated stdin input() lines -->
             <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-1.5">
@@ -384,8 +370,8 @@
               <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Comparação de Resultado (Avaliação de Construção)</div>
               <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                 <div class="bg-slate-900 border border-slate-800 rounded-lg p-2.5">
-                  <div class="text-[11px] font-semibold text-slate-400">Saída Esperada:</div>
-                  <pre id="lab-expected-output" class="code-font text-xs text-indigo-300 mt-1 whitespace-pre-wrap"></pre>
+                  <div class="text-sm font-semibold text-slate-400">Saída do exemplo:</div>
+                  <pre id="lab-expected-output" class="hidden code-font text-sm text-indigo-300 mt-1 whitespace-pre-wrap"></pre>
                 </div>
                 <div class="bg-slate-900 border border-slate-800 rounded-lg p-2.5">
                   <div class="text-[11px] font-semibold text-slate-400">Saída Obtida:</div>
@@ -404,16 +390,16 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Motor de Repetição Espaçada com Agendamento Real (1-3-7-21-30+ Dias)</span>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Baralho de Recuperação Ativa & Histórico de Retenção</h2>
+            <span class="text-xs font-semibold uppercase tracking-wider text-amber-400">Revisão por recuperação ativa</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Cartões para estudar e revisar</h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Os cartões vencidos aparecem primeiro. Um cartão jamais é considerado dominado apenas por ser visualizado: o algoritmo calcula o intervalo real com base no seu histórico de respostas.
+              Cartões novos só entram na fila de revisão depois da primeira resposta. Os intervalos são uma sugestão ajustável baseada na sua autoavaliação, não uma medida objetiva de retenção.
             </p>
           </div>
           <!-- Filters by Level and Topic -->
           <div class="flex flex-wrap items-center gap-2">
             <select id="srs-filter" aria-label="Filtrar flashcards por nível" onchange="filterSrsDeck(this.value)" class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white">
-              <option value="all">Todos os Níveis (24 Cartões)</option>
+              <option value="all">Todos os níveis (30 cartões)</option>
               <option value="due">Apenas Vencidos Hoje</option>
               <option value="1">Nível 1: Fundamentos & Memória</option>
               <option value="2">Nível 2: Controle de Fluxo</option>
@@ -446,19 +432,19 @@
         <!-- SRS Stats Row -->
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-xs text-slate-400">Vencidos Hoje (Prioridade)</div>
-            <div id="srs-stat-due" class="text-xl font-bold text-amber-400 mt-0.5">24</div>
+            <div class="text-xs text-slate-400">Revisões vencidas</div>
+            <div id="srs-stat-due" class="text-xl font-bold text-amber-400 mt-0.5">0</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
             <div class="text-xs text-slate-400">Revisão Curta (1 a 3 dias)</div>
             <div id="srs-stat-hard" class="text-xl font-bold text-rose-400 mt-0.5">0</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-xs text-slate-400">Agendados (7 a 20 dias)</div>
+            <div class="text-xs text-slate-400">Agendados (4 a 20 dias)</div>
             <div id="srs-stat-good" class="text-xl font-bold text-indigo-400 mt-0.5">0</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-xs text-slate-400">Dominados (21 a 30+ dias)</div>
+            <div class="text-xs text-slate-400">Intervalo longo (21+ dias)</div>
             <div id="srs-stat-easy" class="text-xl font-bold text-emerald-400 mt-0.5">0</div>
           </div>
         </div>
@@ -468,24 +454,24 @@
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-400">
             <div class="flex items-center gap-2">
               <span id="srs-card-level-tag" class="px-2.5 py-0.5 rounded-full bg-indigo-500/10 text-indigo-300 border border-indigo-500/30 font-medium">Nível 1</span>
-              <span id="srs-card-meta-tag" class="text-[11px] font-mono text-slate-400">Domínio: 0% • Revisões: 0</span>
+              <span id="srs-card-meta-tag" class="text-sm font-mono text-slate-400">Autoavaliação: 0% • Revisões: 0</span>
             </div>
-            <span id="srs-card-counter">Cartão 1 de 24</span>
+              <span id="srs-card-counter">Cartão 1 de 30</span>
           </div>
 
-          <div onclick="flipSrsCard()" class="cursor-pointer bg-gradient-to-b from-slate-950 to-slate-900 border-2 border-slate-800 hover:border-indigo-500/60 rounded-2xl p-6 sm:p-7 min-h-[250px] flex flex-col justify-between transition-all shadow-xl">
+          <div role="button" tabindex="0" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();flipSrsCard()}" onclick="flipSrsCard()" class="cursor-pointer bg-gradient-to-b from-slate-950 to-slate-900 border-2 border-slate-800 hover:border-indigo-500/60 rounded-2xl p-6 sm:p-7 min-h-[250px] flex flex-col justify-between transition-all shadow-xl">
             <div class="space-y-3">
-              <div id="srs-side-label" class="text-xs font-bold uppercase tracking-wider text-amber-400">❓ Pergunta / Gatilho Prático (Clique para revelar resposta)</div>
+              <div id="srs-side-label" class="text-sm font-bold uppercase tracking-wider text-amber-400">❓ Tente responder antes de revelar</div>
               <h3 id="srs-question-text" class="text-base sm:text-lg font-bold text-white leading-snug"></h3>
               <p id="srs-question-hint" class="text-xs sm:text-sm text-slate-400"></p>
             </div>
 
             <!-- Answer section (hidden until flipped) -->
             <div id="srs-answer-box" class="hidden mt-5 pt-5 border-t border-slate-800 space-y-3">
-              <div class="text-xs font-bold uppercase tracking-wider text-emerald-400">✅ Resposta Direta, Explicação Técnica & Exemplo</div>
-              <p id="srs-answer-direct" class="text-xs sm:text-sm font-semibold text-white"></p>
-              <p id="srs-answer-mental" class="text-xs sm:text-sm text-slate-300 leading-relaxed"></p>
-              <pre id="srs-answer-code" class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 code-font text-xs sm:text-sm text-indigo-300 overflow-x-auto"></pre>
+              <div class="text-sm font-bold uppercase tracking-wider text-emerald-400">✅ Resposta e exemplo</div>
+              <p id="srs-answer-direct" class="text-base font-semibold text-white"></p>
+              <p id="srs-answer-mental" class="text-base text-slate-300 leading-relaxed"></p>
+              <pre id="srs-answer-code" class="bg-slate-950 border border-slate-800 rounded-xl p-3.5 code-font text-sm text-indigo-300 overflow-x-auto"></pre>
             </div>
 
             <div class="pt-4 flex items-center justify-between text-xs text-slate-500">
@@ -498,19 +484,19 @@
           <div id="srs-rating-buttons" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
             <button onclick="rateSrsCard('again')" class="p-3 rounded-xl bg-red-950/60 hover:bg-red-900/70 border border-red-500/40 text-red-200 text-xs font-semibold transition flex flex-col items-center">
               <span>❌ Novamente</span>
-              <span class="text-[11px] text-red-400 font-normal mt-0.5">Não lembrei (Rever hoje / 1d)</span>
+              <span class="text-[11px] text-red-400 font-normal mt-0.5">Não lembrei • rever novamente hoje</span>
             </button>
             <button onclick="rateSrsCard('hard')" class="p-3 rounded-xl bg-rose-950/50 hover:bg-rose-900/60 border border-rose-500/40 text-rose-200 text-xs font-semibold transition flex flex-col items-center">
               <span>😓 Esqueci / Difícil</span>
-              <span class="text-[11px] text-rose-400 font-normal mt-0.5">Rever em +1 dia</span>
+              <span class="text-[11px] text-rose-400 font-normal mt-0.5">Próximo intervalo inicial: +1 dia</span>
             </button>
             <button onclick="rateSrsCard('good')" class="p-3 rounded-xl bg-indigo-950/50 hover:bg-indigo-900/60 border border-indigo-500/40 text-indigo-200 text-xs font-semibold transition flex flex-col items-center">
               <span>👍 Lembrei com Esforço</span>
-              <span class="text-[11px] text-indigo-400 font-normal mt-0.5">Rever em +4 dias</span>
+              <span class="text-[11px] text-indigo-400 font-normal mt-0.5">Próximo intervalo inicial: +3 dias</span>
             </button>
             <button onclick="rateSrsCard('easy')" class="p-3 rounded-xl bg-emerald-950/50 hover:bg-emerald-900/60 border border-emerald-500/40 text-emerald-200 text-xs font-semibold transition flex flex-col items-center">
-              <span>⚡ Fácil / Dominado</span>
-              <span class="text-[11px] text-emerald-400 font-normal mt-0.5">Rever em +21 dias</span>
+              <span>⚡ Lembrei com facilidade</span>
+              <span class="text-[11px] text-emerald-400 font-normal mt-0.5">Próximo intervalo inicial: +21 dias</span>
             </button>
           </div>
         </div>
@@ -518,8 +504,8 @@
         <!-- Real Schedule & Retention Audit Table -->
         <div class="border-t border-slate-800 pt-5 space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Tabela de Agendamento Real e Índice de Domínio por Cartão</h3>
-            <span class="text-xs text-slate-400">Datas reais registradas no navegador</span>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Histórico de revisão e intervalos sugeridos</h3>
+            <span class="text-xs text-slate-400">Intervalo sugerido e autoavaliação</span>
           </div>
           <div class="overflow-x-auto max-h-64 border border-slate-800 rounded-xl">
             <table class="w-full text-left text-xs text-slate-300">
@@ -531,7 +517,7 @@
                   <th class="p-2.5">Última Revisão</th>
                   <th class="p-2.5">Próxima Revisão</th>
                   <th class="p-2.5">Intervalo</th>
-                  <th class="p-2.5">Índice de Domínio</th>
+                  <th class="p-2.5">Autoavaliação</th>
                 </tr>
               </thead>
               <tbody id="srs-history-table-body" class="divide-y divide-slate-800 bg-slate-900/60"></tbody>
@@ -548,8 +534,8 @@
           <div>
             <span class="text-xs font-semibold uppercase tracking-wider text-emerald-400">Aplicação Real do Conhecimento (12 Projetos Progressivos)</span>
             <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Laboratório de Projetos & Portfólio de Competências</h2>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Cada nível possui um projeto prático com requisitos, etapas verificáveis, editor de código e avaliação automática para comprovar a 5ª dimensão (Aplicação Prática).
+              <p class="text-xs sm:text-sm text-slate-400 mt-1">
+              Cada projeto apresenta objetivo, etapas e um caso de saída para conferir. Marque as etapas depois de realizá-las; o resultado automático verifica apenas o exemplo apresentado.
             </p>
           </div>
           <div class="flex items-center gap-3 bg-slate-950 border border-slate-800 px-3.5 py-2 rounded-xl">
@@ -560,7 +546,7 @@
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
           <!-- Left: Project List -->
-          <div class="lg:col-span-4 space-y-2 max-h-[680px] overflow-y-auto pr-1" id="projects-sidebar-list"></div>
+          <div class="lg:col-span-4 space-y-2 pr-1" id="projects-sidebar-list"></div>
 
           <!-- Right: Active Project Workspace -->
           <div class="lg:col-span-8 bg-slate-950 border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4" id="active-project-container"></div>
@@ -579,10 +565,10 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-sky-400">Telemetria Cognitiva 100% Real (Zero Dados Fictícios)</span>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Dashboard de Domínio, Retenção e Diagnóstico de Dificuldades</h2>
+            <span class="text-xs font-semibold uppercase tracking-wider text-sky-400">Indicadores do seu estudo</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Progresso, revisões e pontos para praticar</h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Todos os indicadores e gráficos abaixo refletem exclusivamente suas respostas, revisões SRS, execuções de código e projetos salvos neste dispositivo.
+              Tempo considera atividade recente com a página aberta. Revisões mostram sua autoavaliação; acertos são respostas registradas. Use esses sinais para escolher o próximo estudo, não como medida isolada de domínio.
             </p>
           </div>
           <button onclick="refreshDashboardView()" class="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 self-start md:self-auto">
@@ -593,9 +579,9 @@
         <!-- Real KPIs Grid -->
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-[11px] text-slate-400">Progresso de Domínio</div>
+            <div class="text-[11px] text-slate-400">Etapas concluídas</div>
             <div id="dash-kpi-progress" class="text-xl font-bold text-emerald-400 mt-1">0%</div>
-            <div id="dash-kpi-progress-sub" class="text-[11px] text-slate-500 mt-0.5">0 de 12 níveis</div>
+            <div id="dash-kpi-progress-sub" class="text-[11px] text-slate-500 mt-0.5">0 de 12 etapas</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
             <div class="text-[11px] text-slate-400">Em Andamento</div>
@@ -603,17 +589,17 @@
             <div class="text-[11px] text-slate-500 mt-0.5">Competências ativas</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-[11px] text-slate-400">Taxa de Aproveitamento</div>
+            <div class="text-[11px] text-slate-400">Acertos nas tentativas registradas</div>
             <div id="dash-kpi-accuracy" class="text-xl font-bold text-sky-400 mt-1">0%</div>
             <div id="dash-kpi-accuracy-sub" class="text-[11px] text-slate-500 mt-0.5">0 acertos / 0 tent.</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-[11px] text-slate-400">Retenção nas Revisões</div>
+            <div class="text-[11px] text-slate-400">Autoavaliação nas revisões</div>
             <div id="dash-kpi-retention" class="text-xl font-bold text-amber-400 mt-1">0%</div>
-            <div id="dash-kpi-due-sub" class="text-[11px] text-slate-500 mt-0.5">24 vencidos hoje</div>
+            <div id="dash-kpi-due-sub" class="text-[11px] text-slate-500 mt-0.5">0 vencidos • 30 novos</div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-3.5">
-            <div class="text-[11px] text-slate-400">Tempo Real de Estudo</div>
+            <div class="text-[11px] text-slate-400">Tempo ativo estimado</div>
             <div id="dash-kpi-time" class="text-xl font-bold text-purple-400 mt-1">0 min</div>
             <div id="dash-kpi-sessions-sub" class="text-[11px] text-slate-500 mt-0.5">0 sessões</div>
           </div>
@@ -633,7 +619,7 @@
             </div>
           </div>
           <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-2">
-            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Distribuição do Baralho SRS & Evolução de Sessões</div>
+            <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Novos cartões, atrasos e intervalos sugeridos</div>
             <div class="relative h-72">
               <canvas id="chart-srs-retention"></canvas>
             </div>
@@ -654,21 +640,27 @@
       </div>
     </section>
 
-    <!-- ==================== VIEW 7: MAPA VISUAL ANTI-DECOREBA (POR INTENÇÃO) ==================== -->
+    <!-- ==================== VIEW 7: MAPA DO CURRÍCULO E CONSULTA RÁPIDA ==================== -->
     <section id="view-cheat" class="hidden space-y-5">
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-5">
         <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
           <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-purple-400">Dicionário por Intenção (Zero Decoreba • Níveis 1 a 12)</span>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Não procure pelo comando — procure pelo problema que você quer resolver</h2>
+            <span class="text-xs font-semibold uppercase tracking-wider text-purple-400">Mapa visual • 12 etapas conectadas</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Veja o caminho do básico até aplicações com IA</h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              Digite sua intenção em português (ex: <em>"guardar pares"</em>, <em>"repetir"</em>, <em>"banco de dados"</em>, <em>"api"</em>, <em>"ia"</em>).
+              Selecione uma etapa para abrir a aula. A sequência é recomendada; você ainda pode consultar qualquer nível.
             </p>
           </div>
           <div class="w-full md:w-72">
             <input id="intent-search" type="text" aria-label="Buscar intenção em português" oninput="filterIntentCards(this.value)" placeholder="🔎 Ex: filtrar, sql, api, erro..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-xs sm:text-sm text-white placeholder-slate-500 focus:outline-none focus:border-indigo-500" />
           </div>
         </div>
+
+        <div id="learning-roadmap" class="learning-roadmap" aria-label="Mapa visual da sequência de aprendizagem"></div>
+
+        <details class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+          <summary class="cursor-pointer text-base font-semibold text-indigo-200">Consulta rápida por problema</summary>
+          <p class="text-sm text-slate-400 mt-2">Pesquise uma intenção para encontrar uma estrutura, exemplo curto e etapa relacionada.</p>
 
         <!-- Category Pills (Preserving original labels + adding professional/AI filter) -->
         <div class="flex flex-wrap gap-2">
@@ -681,6 +673,7 @@
         </div>
 
         <div id="intent-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+        </details>
       </div>
     </section>
 
@@ -689,15 +682,26 @@
       <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-6 space-y-6">
         <div class="border-b border-slate-800 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>
-            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Planejamento Adaptativo & Ciência da Aprendizagem</span>
-            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Cronograma Adaptativo 1-3-7-21 & Histórico de Sessões</h2>
+            <span class="text-xs font-semibold uppercase tracking-wider text-indigo-400">Plano semanal ajustado ao seu progresso</span>
+            <h2 class="text-lg sm:text-xl font-bold text-white mt-0.5">Calendário de estudos</h2>
             <p class="text-xs sm:text-sm text-slate-400 mt-1">
-              O sistema adapta a sua sessão diária conforme seu saldo real de cartões vencidos, exercícios pendentes e projetos em andamento — sem punir dias de pausa.
+              Cada dia traz tarefas clicáveis e marcáveis. O plano considera revisões agendadas, conceitos ainda não estudados, respostas recentes e atividades pendentes. Alterar o ritmo ajusta os blocos da semana.
             </p>
           </div>
           <button onclick="logCompletedStudySession()" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow shrink-0">
             ✓ Registrar Sessão de Estudo de Hoje
           </button>
+        </div>
+
+        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h3 class="text-base font-bold text-white">Próximos 7 dias</h3>
+              <p class="text-sm text-slate-400">O calendário é salvo junto com seu progresso e entra no backup/exportação do curso.</p>
+            </div>
+            <span id="calendar-week-summary" class="text-sm text-indigo-200"></span>
+          </div>
+          <div id="study-calendar" class="study-calendar" aria-live="polite"></div>
         </div>
 
         <!-- Next Recommended Action Banner -->
@@ -715,8 +719,8 @@
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-5 space-y-4">
           <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
-              <h3 class="text-sm sm:text-base font-bold text-white">Plano de Sessão Diária Adaptado ao Seu Estado Atual</h3>
-              <p class="text-xs text-slate-400">Escolha seu tempo disponível hoje para distribuir Revisões Pendentes, Conteúdo Novo, Prática, Projeto e Avaliação:</p>
+              <h3 class="text-sm sm:text-base font-bold text-white">Ritmo diário</h3>
+              <p class="text-sm text-slate-400">Escolha o tempo disponível; as tarefas do calendário serão redistribuídas:</p>
             </div>
             <div class="flex gap-2">
               <button onclick="setRoutinePace('30')" id="pace-30" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300">30 min/dia</button>
@@ -731,7 +735,7 @@
         <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
           <div class="flex items-center justify-between">
             <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Histórico Real de Sessões de Estudo</h3>
-            <span class="text-xs text-slate-500">Progresso preservado mesmo com pausas entre dias</span>
+            <span class="text-xs text-slate-500">Tempo ativo estimado, sem contar períodos ociosos</span>
           </div>
           <div id="study-sessions-history-list" class="space-y-2 text-xs text-slate-300 max-h-48 overflow-y-auto"></div>
         </div>

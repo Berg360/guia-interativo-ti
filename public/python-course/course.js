@@ -889,6 +889,36 @@
       }
     ];
 
+    const levelPlainObjectives = {
+      1: "Guardar valores, converter entradas e mostrar resultados claros.",
+      2: "Tomar decisões e repetir tarefas com condições.",
+      3: "Organizar, buscar e transformar coleções de dados.",
+      4: "Dividir problemas em funções que podem ser reaproveitadas.",
+      5: "Criar objetos, lidar com erros e trabalhar com arquivos.",
+      6: "Processar dados sob demanda e testar recursos avançados.",
+      7: "Preparar um projeto Python legível, isolado e observável.",
+      8: "Consultar dados com segurança e entender como são persistidos.",
+      9: "Separar regras de negócio e testar comportamentos.",
+      10: "Validar pedidos e respostas de uma API.",
+      11: "Automatizar tarefas sem duplicar resultados.",
+      12: "Buscar contexto e avaliar sistemas que usam inteligência artificial."
+    };
+
+    const topicPlainLanguage = {
+      1: ["Dê nomes aos valores e escolha o tipo certo para cada dado.", "Monte mensagens com dados e formatação legível.", "Converta o texto digitado em número antes de calcular."],
+      2: ["Escolha um caminho do programa de acordo com uma condição.", "Percorra uma sequência conhecida de valores sem controlar o índice manualmente.", "Repita enquanto uma condição for verdadeira e defina como o ciclo termina."],
+      3: ["Use listas para sequências, tuplas para grupos fixos e conjuntos para itens únicos.", "Relacione cada chave a um valor para encontrar dados pelo nome.", "Filtre ou transforme itens de forma concisa e legível."],
+      4: ["Agrupe instruções em uma função para reutilizá-las com diferentes dados.", "Use return para devolver um resultado e print apenas para exibi-lo.", "Entenda onde cada variável pode ser encontrada e como passar critérios de ordenação."],
+      5: ["Agrupe dados e comportamentos relacionados em objetos.", "Use with para que arquivos e recursos sejam fechados com segurança.", "Trate falhas esperadas sem esconder erros inesperados."],
+      6: ["Use yield para produzir um item por vez, sem montar a sequência inteira de uma vez.", "Envolva uma função para acrescentar um comportamento reutilizável.", "Use async/await principalmente quando o programa aguarda rede ou disco."],
+      7: ["Isole dependências e ferramentas por projeto para evitar conflitos.", "Registre eventos com nível e contexto para encontrar problemas depois.", "Prefira funções pequenas, nomes claros e entradas explícitas."],
+      8: ["Separe comandos SQL dos valores recebidos para reduzir risco de injeção.", "Agrupe alterações que precisam ser confirmadas ou desfeitas juntas.", "Separe a lógica de consulta do restante da aplicação."],
+      9: ["Passe dependências para a função em vez de acoplá-las ao código.", "Organize módulos por responsabilidade e teste regras isoladas.", "Refatore preservando comportamentos observáveis."],
+      10: ["Confira o formato e as regras dos dados antes de processar um pedido.", "Relacione rotas e métodos HTTP ao que a API precisa fazer.", "Distinga validar dados, identificar a pessoa e conferir suas permissões."],
+      11: ["Monte caminhos de arquivo de forma compatível entre sistemas.", "Evite processar o mesmo registro mais de uma vez.", "Use checkpoints e registros para retomar uma tarefa com segurança."],
+      12: ["Transforme texto em vetores para comparar significados aproximados.", "Busque trechos úteis antes de pedir uma resposta ao modelo.", "Registre a fonte e confira se a resposta está apoiada no contexto recuperado."]
+    };
+
     // =========================================================================
     // 2. MENTAL SIMULATOR SCENARIOS (10 SCENARIOS: 6 PRESERVED + 4 NEW)
     // =========================================================================
@@ -1458,9 +1488,16 @@
     ];
 
     // =========================================================================
-    // 4. SPACED REPETITION DECK (24 CARDS WITH FULL TEMPORAL SCHEDULING FIELDS)
+    // 4. SPACED REPETITION DECK (30 CARDS WITH REVIEW HISTORY AND SCHEDULE FIELDS)
     // =========================================================================
-    const TODAY_ISO = new Date().toISOString().slice(0, 10);
+    function localDateKey(date = new Date()) {
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, "0");
+      const day = String(date.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    const TODAY_ISO = localDateKey();
 
     function createInitialSrsDeck() {
       const raw = [
@@ -1487,20 +1524,26 @@
         { id: 21, level: 9, topic: "avancado", difficulty: "Avançado", q: "Como a Injeção de Dependência (SOLID) facilita a criação de testes unitários rápidos?", a: "Ao receber uma abstração (como um repositório ou notificador) no construtor, podemos passar um objeto Fake/Mock em memória durante os testes sem depender de banco ou rede externa.", mental: "Separe regras de negócio puras dos detalhes de infraestrutura.", code: "class Servico:\n    def __init__(self, repo):\n        self.repo = repo" },
         { id: 22, level: 10, topic: "avancado", difficulty: "Avançado", q: "Qual é o papel do Pydantic (BaseModel) em endpoints FastAPI?", a: "Validar e converter automaticamente os tipos e restrições do payload JSON de entrada, retornando HTTP 422 se os dados violarem o contrato.", mental: "Garante que dados inválidos sejam barrados na fronteira HTTP.", code: "class Item(BaseModel):\n    nome: str\n    preco: float = Field(gt=0)" },
         { id: 23, level: 11, topic: "avancado", difficulty: "Intermediário", q: "Por que scripts profissionais de automação utilizam pathlib.Path e são projetados para serem idempotentes?", a: "pathlib trata caminhos de forma portável entre Windows/Linux, e a idempotência garante que reexecutar o script não duplique efeitos colaterais.", mental: "Sempre verifique se o item já foi processado antes de aplicar a ação.", code: "from pathlib import Path\narquivo = Path('dados') / 'relatorio.csv'" },
-        { id: 24, level: 12, topic: "avancado", difficulty: "Avançado", q: "Como funcionam Embeddings e RAG (Retrieval-Augmented Generation) em sistemas com LLMs?", a: "Embeddings convertem textos em vetores numéricos densos; o RAG busca os vetores mais próximos (ex: por similaridade de cosseno) e injeta os trechos relevantes no prompt do LLM.", mental: "Ancora a resposta do modelo em fatos verificados sem precisar re-treinar o LLM.", code: "sim = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))" }
+        { id: 24, level: 12, topic: "avancado", difficulty: "Avançado", q: "Como funcionam Embeddings e RAG (Retrieval-Augmented Generation) em sistemas com LLMs?", a: "Embeddings convertem textos em vetores numéricos densos; o RAG busca os vetores mais próximos (ex: por similaridade de cosseno) e injeta os trechos relevantes no prompt do LLM.", mental: "Ancora a resposta do modelo em fatos verificados sem precisar re-treinar o LLM.", code: "sim = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))" },
+        { id: 25, level: 7, topic: "avancado", difficulty: "Intermediário", q: "Quando registrar um evento com logging em vez de usar print() em um sistema?", a: "Use logging para registrar níveis, contexto e destinos configuráveis; print() é útil para saída direta de scripts simples, mas não oferece os mesmos controles.", mental: "Uma mensagem de log tem severidade e contexto; escolha INFO, WARNING ou ERROR conforme o impacto.", code: "import logging\nlogging.warning('Fila quase cheia')" },
+        { id: 26, level: 8, topic: "avancado", difficulty: "Intermediário", q: "O que uma transação de banco de dados protege quando várias alterações fazem parte da mesma operação?", a: "A transação agrupa alterações que devem ser confirmadas juntas ou desfeitas juntas, preservando consistência diante de falhas.", mental: "Pense em commit para confirmar o conjunto e rollback para desfazer quando uma etapa falha.", code: "conexao.execute('BEGIN')\ntry:\n    conexao.execute(sql, parametros)\n    conexao.commit()\nexcept Exception:\n    conexao.rollback()" },
+        { id: 27, level: 9, topic: "avancado", difficulty: "Avançado", q: "Por que um teste unitário deve verificar comportamento observável em vez de detalhes internos?", a: "Testes focados no contrato protegem o comportamento esperado e permitem refatorar a implementação sem reescrever testes por mudanças internas irrelevantes.", mental: "Teste entradas, saídas e efeitos previstos; evite acoplar o teste a nomes e passos privados.", code: "assert calcular_total([10, 5]) == 15" },
+        { id: 28, level: 10, topic: "avancado", difficulty: "Intermediário", q: "Qual a diferença entre validar dados e autenticar uma requisição de API?", a: "Validação confere formato e regras dos dados enviados; autenticação verifica quem está fazendo a requisição. Autorização determina o que essa identidade pode fazer.", mental: "Dados válidos não provam identidade; identidade válida também não garante permissão.", code: "payload = validar_corpo(request.json)\nusuario = autenticar(request.headers)" },
+        { id: 29, level: 11, topic: "avancado", difficulty: "Intermediário", q: "Como tornar uma automação segura para reexecução após uma falha parcial?", a: "Use operações idempotentes, checkpoints e escrita atômica quando possível; registre itens concluídos e evite repetir efeitos que já foram aplicados.", mental: "Antes de executar uma ação, verifique se ela já foi concluída com sucesso.", code: "if arquivo_destino.exists():\n    registrar('já processado')\nelse:\n    processar(arquivo_origem)" },
+        { id: 30, level: 12, topic: "avancado", difficulty: "Avançado", q: "Por que um sistema RAG deve mostrar de onde veio o trecho usado para responder?", a: "A origem permite conferir relevância, detectar documentos desatualizados e distinguir uma resposta fundamentada de uma geração sem evidência adequada.", mental: "A recuperação precisa ser auditável: documento, trecho e versão ajudam a verificar a resposta.", code: "contexto = recuperar(pergunta)\nresposta = gerar(pergunta, fontes=contexto)" }
       ];
 
       return raw.map(item => ({
         ...item,
         createdAt: TODAY_ISO,
         lastReviewedAt: null,
-        nextReviewAt: TODAY_ISO, // Due immediately
+        nextReviewAt: null, // New cards are available, but not overdue before the first review
         reviewCount: 0,
         intervalDays: 0,
         easeFactor: 2.5,
         masteryIndex: 0,
         history: [],
-        status: "due"
+        status: "new"
       }));
     }
 
@@ -1666,6 +1709,45 @@
       }
     ];
 
+    const EXERCISE_REQUIRED_TOKENS = {
+      ex_lvl_1: ["preco", "desconto", "final =", "print(f"],
+      ex_lvl_2: ["for n in", "range(1, 7)", "n % 2 == 0", "print(n)"],
+      ex_lvl_3: ["precos", "acimade100", "for p in precos", "p > 100"],
+      ex_lvl_4: ["def calcular_frete", "return peso * taxa", "calcular_frete(8)"],
+      ex_lvl_5: ["class Produto", "def __init__", "self.nome", "def resumo"],
+      ex_lvl_6: ["def contar_lotes", "yield", "range(1, n + 1)", "assert"],
+      ex_lvl_7: ["def formatar_log", ".upper()", ".strip()"],
+      ex_lvl_8: ["def montar_insert_seguro", "?", "return sql, params"],
+      ex_lvl_9: ["def processar_pedido", "calc_imposto(valor)", "lambda", "assert total"],
+      ex_lvl_10: ["def validar_payload_produto", "dados.get", "201", "422"],
+      ex_lvl_11: ["for ", "id_venda", "if ", "receita +="],
+      ex_lvl_12: ["for d in docs", "sum(a * b", "maior_score", "melhor_titulo"]
+    };
+
+    const PROJECT_REQUIRED_TOKENS = {
+      1: ["valor_brl", "cotacao_usd", "0.90", "valor_usd"],
+      2: ["for n in notas", "continue", "soma", "validas"],
+      3: ["estoque.items", "qtd < 5", "repor"],
+      4: ["def criar_tarefa", "def contar_pendentes", "return"],
+      5: ["class Carteira", "depositar", "sacar", "ValueError"],
+      6: ["yield", "startswith('ERROR:')", "assert len"],
+      7: ["def registrar_auditoria", ".upper()", ".strip()"],
+      8: ["BETWEEN ? AND ?", "params", "min_p", "max_p"],
+      9: ["def fechar_compra", "estrategia_frete", "assert normal"],
+      10: ["payload.get", "422", "201"],
+      11: ["id_venda", "not in vistos", "receita += valor"],
+      12: ["zip(pergunta_vec", "maior_score", "score > maior_score"]
+    };
+
+    function stripPythonComments(code) {
+      return String(code || "").split("\n").map(line => line.replace(/(^|\s)#.*$/, "")).join("\n");
+    }
+
+    function hasRequiredPythonElements(code, requiredTokens) {
+      const source = stripPythonComments(code);
+      return requiredTokens.every(token => source.includes(token));
+    }
+
     // =========================================================================
     // 6. INTENT-BASED VISUAL CHEAT SHEET (EXPANDED TO 15 CARDS ACROSS ALL 12 LEVELS)
     // =========================================================================
@@ -1806,6 +1888,14 @@
       window.parent.postMessage({ source: "pyneuro-course", type: "storage:set", key, value }, "*");
     }
 
+    function buildExerciseScaffold(exercise) {
+      return `# Desafio: ${exercise.title}\n# Leia o enunciado e escreva sua tentativa abaixo.\n# Use a dica se precisar; o resultado de referência aparece depois da primeira tentativa.\n\n`;
+    }
+
+    function buildProjectScaffold(project) {
+      return `# Projeto: ${project.title}\n# Divida a solução em etapas pequenas e marque cada etapa após concluí-la.\n# O caso de saída pode ser consultado depois da primeira tentativa.\n\n`;
+    }
+
     function createDefaultStudentState() {
       const competencies = {};
       courseLevels.forEach(lvl => {
@@ -1828,8 +1918,10 @@
       practicalProjects.forEach(p => {
         projectsState[p.id] = {
           status: "nao_iniciado", // nao_iniciado | em_andamento | concluido
-          userCode: p.starterCode,
+          userCode: buildProjectScaffold(p),
           completedSteps: [],
+          attemptCount: 0,
+          lastAttemptCode: null,
           passedChecks: false,
           completedAt: null
         };
@@ -1838,19 +1930,28 @@
       const exerciseResponses = {};
       labExercises.forEach(ex => {
         exerciseResponses[ex.id] = {
-          userCode: ex.starterCode,
+          userCode: buildExerciseScaffold(ex),
           passed: false,
+          attemptCount: 0,
+          lastAttemptCode: null,
+          lastCountedAttemptCode: null,
           lastOutput: "",
           updatedAt: null
         };
       });
 
+      const topicProgress = {};
+      courseLevels.forEach(level => { topicProgress[level.id] = level.topics.map(() => false); });
+
       return {
         version: 2,
         xp: 0,
         studyTimeSeconds: 0,
+        lastLoggedStudyTimeSeconds: 0,
         lastAccessedLevelId: 1,
         lastActiveView: "trilha",
+        topicProgress,
+        studyCalendar: {},
         activeLessonSubtab: "aula", // aula | avaliacao
         preferences: {
           dailyPaceMinutes: "60",
@@ -1876,12 +1977,38 @@
       base.xp = Math.floor(candidate.xp);
       base.studyTimeSeconds = typeof candidate.studyTimeSeconds === "number" && candidate.studyTimeSeconds >= 0
         ? Math.floor(candidate.studyTimeSeconds) : 0;
+      base.lastLoggedStudyTimeSeconds = typeof candidate.lastLoggedStudyTimeSeconds === "number"
+        ? Math.min(base.studyTimeSeconds, Math.max(0, Math.floor(candidate.lastLoggedStudyTimeSeconds)))
+        : base.studyTimeSeconds;
       base.lastAccessedLevelId = courseLevels.some(l => l.id === candidate.lastAccessedLevelId)
         ? candidate.lastAccessedLevelId : 1;
       if (candidate.preferences && typeof candidate.preferences === "object") {
         if (["30", "60", "90"].includes(String(candidate.preferences.dailyPaceMinutes))) {
           base.preferences.dailyPaceMinutes = String(candidate.preferences.dailyPaceMinutes);
         }
+      }
+
+      if (candidate.topicProgress && typeof candidate.topicProgress === "object") {
+        courseLevels.forEach(level => {
+          const savedTopics = candidate.topicProgress[level.id];
+          if (Array.isArray(savedTopics)) {
+            base.topicProgress[level.id] = level.topics.map((_, index) => Boolean(savedTopics[index]));
+          }
+        });
+      } else {
+        // Older backups had no per-concept checklist. Preserve their completed levels during migration.
+        courseLevels.forEach(level => {
+          if (candidate.competencies?.[level.id]?.status === "dominado") {
+            base.topicProgress[level.id] = level.topics.map(() => true);
+          }
+        });
+      }
+      if (candidate.studyCalendar && typeof candidate.studyCalendar === "object") {
+        Object.entries(candidate.studyCalendar).forEach(([dateKey, tasks]) => {
+          if (/^\d{4}-\d{2}-\d{2}$/.test(dateKey) && tasks && typeof tasks === "object" && !Array.isArray(tasks)) {
+            base.studyCalendar[dateKey] = Object.fromEntries(Object.entries(tasks).map(([id, done]) => [id, Boolean(done)]));
+          }
+        });
       }
 
       // Restore competencies
@@ -1908,8 +2035,14 @@
           const sp = candidate.projects[pid];
           if (sp && typeof sp === "object") {
             base.projects[pid].status = ["nao_iniciado", "em_andamento", "concluido"].includes(sp.status) ? sp.status : "nao_iniciado";
-            base.projects[pid].userCode = typeof sp.userCode === "string" ? sp.userCode : base.projects[pid].userCode;
+            const projectDefinition = practicalProjects.find(project => String(project.id) === String(pid));
+            const savedCode = typeof sp.userCode === "string" ? sp.userCode : "";
+            base.projects[pid].userCode = projectDefinition && !sp.passedChecks && savedCode === projectDefinition.starterCode
+              ? buildProjectScaffold(projectDefinition)
+              : (savedCode || base.projects[pid].userCode);
             base.projects[pid].completedSteps = Array.isArray(sp.completedSteps) ? sp.completedSteps : [];
+            base.projects[pid].attemptCount = Math.max(sp.passedChecks ? 1 : 0, Number(sp.attemptCount) || 0);
+            base.projects[pid].lastAttemptCode = typeof sp.lastAttemptCode === "string" ? sp.lastAttemptCode : null;
             base.projects[pid].passedChecks = Boolean(sp.passedChecks);
             base.projects[pid].completedAt = sp.completedAt || null;
           }
@@ -1921,8 +2054,15 @@
         Object.keys(base.exerciseResponses).forEach(exId => {
           const se = candidate.exerciseResponses[exId];
           if (se && typeof se === "object") {
-            base.exerciseResponses[exId].userCode = typeof se.userCode === "string" ? se.userCode : base.exerciseResponses[exId].userCode;
+            const exerciseDefinition = labExercises.find(exercise => exercise.id === exId);
+            const savedCode = typeof se.userCode === "string" ? se.userCode : "";
+            base.exerciseResponses[exId].userCode = exerciseDefinition && !se.passed && savedCode === exerciseDefinition.starterCode
+              ? buildExerciseScaffold(exerciseDefinition)
+              : (savedCode || base.exerciseResponses[exId].userCode);
             base.exerciseResponses[exId].passed = Boolean(se.passed);
+            base.exerciseResponses[exId].attemptCount = Math.max(se.passed ? 1 : 0, Number(se.attemptCount) || 0);
+            base.exerciseResponses[exId].lastAttemptCode = typeof se.lastAttemptCode === "string" ? se.lastAttemptCode : null;
+            base.exerciseResponses[exId].lastCountedAttemptCode = typeof se.lastCountedAttemptCode === "string" ? se.lastCountedAttemptCode : null;
             base.exerciseResponses[exId].lastOutput = typeof se.lastOutput === "string" ? se.lastOutput : "";
             base.exerciseResponses[exId].updatedAt = se.updatedAt || null;
           }
@@ -1940,7 +2080,7 @@
         return {
           ...defaultCard,
           lastReviewedAt: sc.lastReviewedAt || null,
-          nextReviewAt: typeof sc.nextReviewAt === "string" ? sc.nextReviewAt : TODAY_ISO,
+          nextReviewAt: typeof sc.nextReviewAt === "string" ? sc.nextReviewAt : defaultCard.nextReviewAt,
           reviewCount: Number(sc.reviewCount) || 0,
           intervalDays: Number(sc.intervalDays) || 0,
           easeFactor: Number(sc.easeFactor) || 2.5,
@@ -2030,17 +2170,25 @@
 
     // Initialize global state
     let studentState = loadStudentState();
-    const requestedLevelId = Number(new URLSearchParams(window.location.search).get("level"));
+    const COURSE_VIEWS = ['trilha', 'lab', 'python-lab', 'srs', 'projetos', 'dashboard', 'cheat', 'metodo'];
+    const initialCourseParams = new URLSearchParams(window.location.search);
+    const requestedLevelId = Number(initialCourseParams.get("level"));
+    let activeView = COURSE_VIEWS.includes(initialCourseParams.get("view")) ? initialCourseParams.get("view") : "trilha";
+    const resumeFromTopicProgress = courseLevels.find(level => (studentState.topicProgress[level.id] || []).some(done => !done));
+    const resumeFromCompetency = courseLevels.find(level => studentState.competencies[level.id].status !== "dominado");
+    const recommendedResumeLevelId = (resumeFromTopicProgress || resumeFromCompetency)?.id || studentState.lastAccessedLevelId || 1;
     let activeLevelId = courseLevels.some(level => level.id === requestedLevelId)
       ? requestedLevelId
-      : (studentState.lastAccessedLevelId || 1);
+      : recommendedResumeLevelId;
     if (courseLevels.some(level => level.id === requestedLevelId)) studentState.lastAccessedLevelId = requestedLevelId;
-    let activeLessonSubtab = "aula";
+    let activeLessonSubtab = initialCourseParams.get("subtab") === "avaliacao" ? "avaliacao" : "aula";
     let activeSimKey = "variaveis";
     let activeSimStep = 0;
     let simAutoPlayTimer = null;
-    let activeProjectId = 1;
-    let activeLabExerciseId = "ex_lvl_1";
+    let activeProjectId = practicalProjects.some(project => project.id === Number(initialCourseParams.get("project")))
+      ? Number(initialCourseParams.get("project")) : 1;
+    let activeLabExerciseId = labExercises.some(exercise => exercise.id === initialCourseParams.get("exercise"))
+      ? initialCourseParams.get("exercise") : "ex_lvl_1";
 
     let filteredSrsDeck = [];
     let currentSrsIndex = 0;
@@ -2057,8 +2205,32 @@
     // =========================================================================
     // 8. NAVIGATION, HEADER METRICS & STUDY TIMER
     // =========================================================================
-    function switchView(viewName) {
-      const views = ['trilha', 'lab', 'python-lab', 'srs', 'projetos', 'dashboard', 'cheat', 'metodo'];
+    function updateCourseUrl(replace = false) {
+      const params = new URLSearchParams(window.location.search);
+      params.set("view", activeView);
+      params.set("level", String(activeLevelId));
+      if (activeView === "projetos") params.set("project", String(activeProjectId));
+      else params.delete("project");
+      if (activeView === "python-lab") params.set("exercise", activeLabExerciseId);
+      else params.delete("exercise");
+      if (activeView === "srs") {
+        params.set("srsLevel", currentSrsLevelFilter);
+        params.set("srsTopic", currentSrsTopicFilter);
+      } else {
+        params.delete("srsLevel");
+        params.delete("srsTopic");
+      }
+      if (activeView === "trilha" && activeLessonSubtab === "avaliacao") params.set("subtab", "avaliacao");
+      else params.delete("subtab");
+      const nextUrl = `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+      if (replace) window.history.replaceState({ pyneuro: true }, "", nextUrl);
+      else window.history.pushState({ pyneuro: true }, "", nextUrl);
+    }
+
+    function switchView(viewName, options = {}) {
+      if (!COURSE_VIEWS.includes(viewName)) viewName = "trilha";
+      activeView = viewName;
+      const views = COURSE_VIEWS;
       views.forEach(v => {
         const sec = document.getElementById('view-' + v);
         const btn = document.getElementById('tab-btn-' + v);
@@ -2086,6 +2258,7 @@
 
       studentState.lastActiveView = viewName;
       saveStudentState();
+      if (!options.fromHistory) updateCourseUrl(Boolean(options.replaceHistory));
 
       if (viewName === 'dashboard') {
         refreshDashboardView();
@@ -2097,6 +2270,32 @@
         renderAdaptiveSchedule();
       }
     }
+
+    function restoreCourseRouteFromUrl() {
+      const params = new URLSearchParams(window.location.search);
+      const levelId = Number(params.get("level"));
+      const projectId = Number(params.get("project"));
+      const exerciseId = params.get("exercise");
+      activeLevelId = courseLevels.some(level => level.id === levelId) ? levelId : 1;
+      studentState.lastAccessedLevelId = activeLevelId;
+      activeProjectId = practicalProjects.some(project => project.id === projectId) ? projectId : 1;
+      activeLabExerciseId = labExercises.some(exercise => exercise.id === exerciseId) ? exerciseId : "ex_lvl_1";
+      activeLessonSubtab = params.get("subtab") === "avaliacao" ? "avaliacao" : "aula";
+      const srsLevel = params.get("srsLevel");
+      currentSrsLevelFilter = srsLevel === "due" || srsLevel === "all" || courseLevels.some(level => String(level.id) === srsLevel) ? srsLevel : "all";
+      const srsTopic = params.get("srsTopic");
+      currentSrsTopicFilter = ["all", "sintaxe", "fluxo", "estruturas", "funcoes", "poo_arquivos", "avancado"].includes(srsTopic) ? srsTopic : "all";
+      const srsLevelSelect = document.getElementById("srs-filter");
+      const srsTopicSelect = document.getElementById("srs-topic-filter");
+      if (srsLevelSelect) srsLevelSelect.value = currentSrsLevelFilter;
+      if (srsTopicSelect) srsTopicSelect.value = currentSrsTopicFilter;
+      renderAllViews();
+      const viewName = COURSE_VIEWS.includes(params.get("view")) ? params.get("view") : "trilha";
+      switchView(viewName, { fromHistory: true });
+      saveStudentState();
+    }
+
+    window.addEventListener('popstate', restoreCourseRouteFromUrl);
 
     function toggleMobileCourseMenu() {
       const sidebar = document.getElementById('course-sidebar');
@@ -2152,7 +2351,7 @@
       if (accEl) accEl.textContent = `${m.accuracyPct}%`;
 
       const sidebarSummary = document.getElementById('sidebar-mastery-summary');
-      if (sidebarSummary) sidebarSummary.textContent = `${m.dominatedCount}/${courseLevels.length} Dominados`;
+      if (sidebarSummary) sidebarSummary.textContent = `${m.dominatedCount}/${courseLevels.length} concluídas`;
 
       const pct = Math.round((m.dominatedCount / courseLevels.length) * 100);
       document.getElementById('header-progress-bar').style.width = `${pct}%`;
@@ -2165,13 +2364,38 @@
       }
     }
 
-    // Real Study Time Ticker (increments every 5 seconds while page is visible)
+    // Count foreground time only while the learner has interacted recently.
+    let lastLearnerActivityAt = 0;
+    let lastStudyTimerTickAt = Date.now();
+    let lastStudyTimePersistedSeconds = studentState.studyTimeSeconds;
+    const ACTIVE_IDLE_LIMIT_MS = 60_000;
+    ["pointerdown", "keydown", "scroll", "input", "touchstart"].forEach(eventName => {
+      document.addEventListener(eventName, () => { lastLearnerActivityAt = Date.now(); }, { passive: true });
+    });
+    document.addEventListener("visibilitychange", () => { lastStudyTimerTickAt = Date.now(); });
     setInterval(() => {
-      if (!document.hidden) {
-        studentState.studyTimeSeconds += 5;
-        saveStudentState();
+      const now = Date.now();
+      const elapsedSeconds = Math.max(0, Math.min(10, Math.round((now - lastStudyTimerTickAt) / 1000)));
+      lastStudyTimerTickAt = now;
+      const recentlyActive = lastLearnerActivityAt > 0 && now - lastLearnerActivityAt <= ACTIVE_IDLE_LIMIT_MS;
+      if (!document.hidden && recentlyActive && elapsedSeconds > 0) {
+        studentState.studyTimeSeconds += elapsedSeconds;
+        updateProgressHeader();
+        // Avoid pushing a cloud sync on every timer tick; checkpoint once per minute.
+        if (studentState.studyTimeSeconds - lastStudyTimePersistedSeconds >= 60) {
+          lastStudyTimePersistedSeconds = studentState.studyTimeSeconds;
+          saveStudentState();
+        }
       }
     }, 5000);
+    window.addEventListener("pagehide", () => {
+      if (activeView === "python-lab") saveCurrentLabExerciseCode(true);
+      if (activeView === "projetos") saveProjectDraft(activeProjectId, true);
+      if (studentState.studyTimeSeconds !== lastStudyTimePersistedSeconds) {
+        lastStudyTimePersistedSeconds = studentState.studyTimeSeconds;
+        saveStudentState();
+      }
+    });
 
     // =========================================================================
     // 9. BACKUP, IMPORT, EXPORT & RESET MODAL FUNCTIONS
@@ -2277,7 +2501,7 @@
       em_aprendizagem: { text: "Em aprendizagem", cls: "bg-sky-500/15 text-sky-300 border-sky-500/30" },
       em_pratica: { text: "Em prática", cls: "bg-amber-500/15 text-amber-300 border-amber-500/30" },
       em_avaliacao: { text: "Em avaliação", cls: "bg-purple-500/15 text-purple-300 border-purple-500/30" },
-      dominado: { text: "✓ Dominado", cls: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold" }
+      dominado: { text: "✓ Concluído (5/5)", cls: "bg-emerald-500/20 text-emerald-300 border-emerald-500/40 font-bold" }
     };
 
     function renderLevelsSidebar() {
@@ -2298,7 +2522,7 @@
             <div class="flex items-start justify-between gap-2 w-full">
               <div>
                 <div class="text-[10px] font-semibold uppercase tracking-wider text-indigo-400">${escapeHtml(lvl.tag)}</div>
-                <div class="text-xs sm:text-sm font-bold text-white leading-snug mt-0.5">${escapeHtml(lvl.title)}</div>
+            <div class="text-sm font-bold text-white leading-snug mt-0.5">${escapeHtml(lvl.title)}</div>
               </div>
               <span class="px-2 py-0.5 rounded-full text-[10px] border shrink-0 ${stInfo.cls}">${stInfo.text}</span>
             </div>
@@ -2316,17 +2540,92 @@
       }).join('');
     }
 
-    function selectLevel(id) {
+    function selectLevel(id, options = {}) {
       activeLevelId = id;
       studentState.lastAccessedLevelId = id;
       saveStudentState();
       renderLevelsSidebar();
       renderActiveLesson();
+      renderCourseStartPanel();
+      renderLearningRoadmap();
+      if (!options.skipRoute) updateCourseUrl();
     }
 
-    function switchLessonSubtab(subtab) {
+    function switchLessonSubtab(subtab, options = {}) {
       activeLessonSubtab = subtab;
       renderActiveLesson();
+      if (!options.skipRoute) updateCourseUrl();
+    }
+
+    function startCourse() {
+      selectLevel(1, { skipRoute: true });
+      switchLessonSubtab("aula", { skipRoute: true });
+      switchView("trilha", { replaceHistory: true });
+      document.getElementById("lesson-container")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function renderCourseStartPanel() {
+      const panel = document.getElementById("course-start-panel");
+      if (!panel) return;
+      const level = courseLevels.find(item => item.id === activeLevelId) || courseLevels[0];
+      const progress = studentState.topicProgress[activeLevelId] || [];
+      const readCount = progress.filter(Boolean).length;
+      const isFresh = !Object.values(studentState.competencies).some(item => item.status !== "nao_iniciado") &&
+        !Object.values(studentState.topicProgress).some(topics => topics.some(Boolean));
+      const heading = isFresh ? "Comece por aqui" : `Continue do Nível ${level.id}`;
+      const supporting = isFresh
+        ? "Siga a sequência: estude um conceito, tente explicar sem olhar, resolva o exercício e aplique em um projeto."
+        : `Você está no Nível ${level.id}: ${readCount}/${level.topics.length} conceitos marcados como estudados.`;
+      panel.innerHTML = `
+        <div class="course-start-main">
+          <span class="course-eyebrow">SEU PRÓXIMO PASSO</span>
+          <h2>${heading}</h2>
+          <p>${escapeHtml(supporting)}</p>
+          <div class="course-start-sequence" aria-label="Etapas recomendadas">
+            <span><b>1</b> Aprenda</span><span><b>2</b> Recupere da memória</span><span><b>3</b> Pratique</span><span><b>4</b> Aplique</span>
+          </div>
+        </div>
+        <div class="course-start-actions">
+          <button class="course-primary-action" type="button" onclick="${isFresh ? "startCourse()" : `openRecommendedLesson(${level.id})`}">${isFresh ? "Iniciar pelo Nível 1" : `Abrir Nível ${level.id}`} <span aria-hidden="true">→</span></button>
+          <button class="course-secondary-action" type="button" onclick="switchView('metodo')">Ver calendário de 7 dias</button>
+        </div>`;
+    }
+
+    function openRecommendedLesson(levelId) {
+      selectLevel(levelId, { skipRoute: true });
+      switchLessonSubtab("aula", { skipRoute: true });
+      switchView("trilha", { replaceHistory: true });
+      document.getElementById("lesson-container")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+
+    function openLevelFromMap(levelId) {
+      openRecommendedLesson(levelId);
+    }
+
+    function renderLearningRoadmap() {
+      const map = document.getElementById("learning-roadmap");
+      if (!map) return;
+      map.innerHTML = `<div class="roadmap-grid">${courseLevels.map(level => {
+        const comp = studentState.competencies[level.id];
+        const topicDone = (studentState.topicProgress[level.id] || []).filter(Boolean).length;
+        const status = comp.status === "dominado" ? "Concluído" : topicDone ? `${topicDone}/${level.topics.length} conceitos` : "A iniciar";
+        return `<button type="button" class="roadmap-node ${level.id === activeLevelId ? "is-current" : ""}" onclick="openLevelFromMap(${level.id})" aria-label="Abrir nível ${level.id}: ${escapeHtml(level.title)}">
+          <span class="roadmap-node-number">${String(level.id).padStart(2, "0")}</span>
+          <span class="roadmap-node-copy"><strong>${escapeHtml(level.title)}</strong><small>${escapeHtml(status)}</small></span>
+          <span class="roadmap-node-arrow" aria-hidden="true">→</span>
+        </button>`;
+      }).join("")}</div>`;
+    }
+
+    function markTopicStudied(levelId, topicIndex, checked) {
+      if (!studentState.topicProgress[levelId]) studentState.topicProgress[levelId] = [];
+      studentState.topicProgress[levelId][topicIndex] = Boolean(checked);
+      saveStudentState();
+      renderActiveLesson();
+      renderLevelsSidebar();
+      renderCourseStartPanel();
+      renderLearningRoadmap();
+      renderAdaptiveSchedule();
     }
 
     function renderActiveLesson() {
@@ -2337,34 +2636,39 @@
       const stInfo = STATUS_LABELS[comp.status];
       const container = document.getElementById('lesson-container');
 
-      const topicsHtml = lvl.topics.map((t, idx) => `
-        <div class="bg-slate-950 border border-slate-800 rounded-xl p-4 space-y-3">
-          <div class="flex flex-wrap items-center justify-between gap-2">
-            <h4 class="text-sm sm:text-base font-bold text-white flex items-center gap-2">
-              <span class="w-6 h-6 rounded-lg bg-indigo-500/20 border border-indigo-500/40 text-indigo-300 text-xs flex items-center justify-center font-mono">${idx + 1}</span>
-              ${escapeHtml(t.name)}
-            </h4>
-            <span class="text-[11px] text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2.5 py-0.5 rounded-full">Aplicação & Sintaxe</span>
+      const topicProgress = studentState.topicProgress[lvl.id] || [];
+      const nextTopicIndex = topicProgress.findIndex(done => !done);
+      const topicsHtml = lvl.topics.map((t, idx) => {
+        const done = Boolean(topicProgress[idx]);
+        return `
+        <details class="lesson-topic" ${idx === (nextTopicIndex < 0 ? 0 : nextTopicIndex) ? "open" : ""}>
+          <summary class="lesson-topic-summary">
+            <span class="lesson-topic-number">${String(idx + 1).padStart(2, "0")}</span>
+            <span class="lesson-topic-title">${escapeHtml(t.name)}</span>
+            <span class="lesson-topic-status ${done ? "is-done" : ""}">${done ? "Estudado" : "Abrir conceito"}</span>
+          </summary>
+          <div class="lesson-topic-body">
+            <p class="lesson-core"><strong>Em termos simples:</strong> ${escapeHtml(topicPlainLanguage[lvl.id]?.[idx] || t.why)}</p>
+            <p class="lesson-prompt"><strong>Recupere da memória:</strong> antes de executar, explique com suas palavras o que este trecho fará e por que.</p>
+            <div class="lesson-code-sample"><span>EXEMPLO PARA OBSERVAR</span><pre class="code-font">${escapeHtml(t.syntax)}</pre></div>
+            <details class="lesson-technical-detail">
+              <summary>Quando usar e qual problema resolve</summary>
+              <p class="lesson-technical-intro">${escapeHtml(t.why)}</p>
+            </details>
+            <details class="lesson-technical-detail">
+              <summary>Ver explicação técnica e função de cada parte</summary>
+              <p class="lesson-technical-intro">${escapeHtml(lvl.analogyBody)}</p>
+              <div class="lesson-anatomy-grid">${t.anatomy.map(a => `
+                <div><code class="code-font ${a.color}">${escapeHtml(a.part)}</code><span>${escapeHtml(a.role)}</span></div>
+              `).join("")}</div>
+            </details>
+            <label class="lesson-completion">
+              <input type="checkbox" ${done ? "checked" : ""} onchange="markTopicStudied(${lvl.id}, ${idx}, this.checked)" />
+              <span>Já estudei este conceito e consigo explicá-lo sem consultar a tela.</span>
+            </label>
           </div>
-          <p class="text-xs sm:text-sm text-slate-300 leading-relaxed">
-            <strong class="text-slate-100">Por que e quando usar:</strong> ${escapeHtml(t.why)}
-          </p>
-          <div class="bg-slate-900 border border-slate-800 rounded-lg p-3 overflow-x-auto">
-            <pre class="code-font text-xs sm:text-sm text-indigo-200">${escapeHtml(t.syntax)}</pre>
-          </div>
-          <div class="space-y-1.5 pt-1">
-            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Anatomia Técnica de Cada Elemento:</div>
-            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              ${t.anatomy.map(a => `
-                <div class="bg-slate-900/90 border border-slate-800/80 rounded-lg p-2.5">
-                  <div class="code-font text-xs font-bold ${a.color}">${escapeHtml(a.part)}</div>
-                  <div class="text-[11px] text-slate-300 mt-1 leading-snug">${escapeHtml(a.role)}</div>
-                </div>
-              `).join('')}
-            </div>
-          </div>
-        </div>
-      `).join('');
+        </details>`;
+      }).join("");
 
       // Subtab 2: 5-Dimension Competency Assessment HTML
       const dimQuestions = [
@@ -2380,8 +2684,8 @@
               <h3 class="text-sm font-bold text-white">Critérios de Aprovação Baseados em Evidências (Nível ${lvl.id})</h3>
               <span class="text-xs font-mono text-emerald-400">${doneDims}/5 Dimensões Comprovadas</span>
             </div>
-            <p class="text-xs text-slate-400">
-              O status <strong>Dominado</strong> nunca é concedido automaticamente por clicar em um botão: você precisa comprovar as 5 dimensões abaixo (3 avaliações diagnósticas + 1 exercício de construção de código no Laboratório + 1 projeto prático validado).
+            <p class="text-sm text-slate-300">
+              Para concluir esta etapa, responda às três questões, faça o exercício e confira o projeto. O código verifica as respostas e o caso de exemplo indicado; os checklists de leitura e projeto são autoavaliações, não uma prova independente.
             </p>
           </div>
 
@@ -2396,7 +2700,7 @@
                 <p class="text-xs sm:text-sm font-medium text-white">${escapeHtml(dq.data.q)}</p>
                 <div class="grid grid-cols-1 gap-2">
                   ${dq.data.options.map((opt, oIdx) => `
-                    <button onclick="evaluateCompetencyDimension(${lvl.id}, '${dq.key}', ${oIdx})" class="w-full text-left p-2.5 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500 transition flex items-start gap-2.5 text-xs text-slate-200">
+                    <button ${passed ? "disabled" : ""} onclick="evaluateCompetencyDimension(${lvl.id}, '${dq.key}', ${oIdx})" class="w-full text-left p-3 rounded-xl bg-slate-900 hover:bg-slate-800 border border-slate-700 hover:border-indigo-500 transition flex items-start gap-2.5 text-sm text-slate-200 disabled:cursor-not-allowed disabled:opacity-60">
                       <span class="px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono font-bold">${String.fromCharCode(65 + oIdx)}</span>
                       <span>${escapeHtml(opt)}</span>
                     </button>
@@ -2417,7 +2721,7 @@
                   <span class="text-xs font-bold uppercase text-indigo-400">Dimensão 3: Construção de Código</span>
                   <span class="text-xs ${d.construction ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${d.construction ? '✓ Comprovada' : 'Pendente'}</span>
                 </div>
-                <p class="text-xs text-slate-300">Execute e valide o exercício prático do Nível ${lvl.id} no Laboratório Python comparando a saída obtida com a esperada.</p>
+                <p class="text-sm text-slate-300">Resolva o desafio sem copiar o exemplo. A validação automática confere o caso informado no exercício.</p>
               </div>
               <button onclick="openLevelLabExercise(${lvl.id})" class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold transition self-start">
                 💻 Resolver Exercício no Laboratório →
@@ -2430,7 +2734,7 @@
                   <span class="text-xs font-bold uppercase text-emerald-400">Dimensão 5: Aplicação Prática</span>
                   <span class="text-xs ${d.application ? 'text-emerald-400 font-bold' : 'text-slate-400'}">${d.application ? '✓ Comprovada' : 'Pendente'}</span>
                 </div>
-                <p class="text-xs text-slate-300">Construa e valide o Projeto Prático do Nível ${lvl.id} para adicioná-lo ao seu Portfólio de Competências.</p>
+                <p class="text-sm text-slate-300">Implemente as etapas, marque cada uma depois de concluí-la e compare a saída do caso apresentado.</p>
               </div>
               <button onclick="openLevelProject(${lvl.id})" class="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition self-start">
                 🛠️ Abrir Projeto do Nível ${lvl.id} →
@@ -2447,15 +2751,24 @@
             <div class="flex flex-wrap items-center gap-2">
               <span class="text-xs font-bold uppercase tracking-wider text-indigo-400">${escapeHtml(lvl.tag)}</span>
               <span class="text-xs text-slate-500">•</span>
-              <span class="text-xs text-emerald-400 font-medium">${escapeHtml(lvl.spiralConnection)}</span>
+              <span class="text-sm text-emerald-300 font-medium">${topicProgress.filter(Boolean).length}/${lvl.topics.length} conceitos estudados</span>
             </div>
             <h2 class="text-lg sm:text-2xl font-bold text-white">${escapeHtml(lvl.title)}</h2>
-            <p class="text-xs text-slate-400"><strong>Objetivo:</strong> ${escapeHtml(lvl.objective)} | <strong>Pré-requisitos:</strong> ${escapeHtml(lvl.prerequisites)}</p>
+            <p class="lesson-objective"><strong>Você vai aprender:</strong> ${escapeHtml(levelPlainObjectives[lvl.id] || lvl.objective)}</p>
+            <details class="lesson-technical-detail"><summary>Ver objetivo técnico e conexão com outros níveis</summary><p class="lesson-technical-intro">${escapeHtml(lvl.objective)} ${escapeHtml(lvl.spiralConnection)}</p></details>
+            <p class="lesson-prerequisite"><strong>Para começar:</strong> ${escapeHtml(lvl.prerequisites)}</p>
           </div>
           <div class="flex flex-col items-end gap-1.5 shrink-0">
-            <span class="px-3 py-1 rounded-full text-xs border ${stInfo.cls}">${stInfo.text} (${doneDims}/5)</span>
-            <span class="text-[11px] text-slate-400">Critério: 5/5 evidências para Dominado</span>
+            <span class="px-3 py-1 rounded-full text-xs border ${stInfo.cls}">${stInfo.text} • critérios ${doneDims}/5</span>
+            <span class="text-sm text-slate-400">O indicador mostra critérios concluídos; não é uma prova independente.</span>
           </div>
+        </div>
+
+        <div class="lesson-flow" aria-label="Sequência recomendada para este nível">
+          <div><b>1</b><strong>Estude</strong><span>Abra um conceito por vez</span></div>
+          <div><b>2</b><strong>Explique</strong><span>Tente lembrar sem olhar</span></div>
+          <div><b>3</b><strong>Pratique</strong><span>Resolva no laboratório</span></div>
+          <div><b>4</b><strong>Aplique</strong><span>Complete o projeto</span></div>
         </div>
 
         <!-- 5-Dimension Progress Bar Pills -->
@@ -2477,39 +2790,39 @@
           </div>
         </div>
 
-        <!-- Sub-navigation inside Level to prevent long pages -->
+        <!-- Sub-navigation for lessons, assessment and practice -->
         <div class="flex flex-wrap items-center gap-2 border-b border-slate-800 pb-3">
           <button onclick="switchLessonSubtab('aula')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${activeLessonSubtab === 'aula' ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'}">
-            📖 1. Estudo Visual & Explicação Técnica
+            📖 Aprender conceitos
           </button>
           <button onclick="switchLessonSubtab('avaliacao')" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${activeLessonSubtab === 'avaliacao' ? 'bg-indigo-600 text-white' : 'bg-slate-950 text-slate-400 hover:text-white border border-slate-800'}">
-            🎯 2. Avaliação de Competências (${doneDims}/5 Evidências)
+            🎯 Praticar recuperação (${doneDims}/5)
           </button>
           <button onclick="openLevelLabExercise(${lvl.id})" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-950 text-emerald-400 hover:bg-slate-800 border border-slate-800 transition">
-            💻 3. Praticar no Laboratório Python
+            💻 Laboratório
           </button>
           <button onclick="openLevelInSrs(${lvl.id})" class="px-3.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-950 text-amber-300 hover:bg-slate-800 border border-slate-800 transition">
-            🧠 4. Flashcards deste Nível
+            🧠 Revisar cartões
           </button>
         </div>
 
         ${activeLessonSubtab === 'aula' ? `
-          <!-- Mental Model & Technical Precision Box -->
-          <div class="bg-gradient-to-br from-indigo-950/60 via-slate-950 to-slate-950 border border-indigo-500/40 rounded-xl p-4 sm:p-5 space-y-2">
-            <h3 class="text-sm sm:text-base font-bold text-indigo-300">${escapeHtml(lvl.analogyTitle)}</h3>
-            <p class="text-xs sm:text-sm text-slate-200 leading-relaxed">${escapeHtml(lvl.analogyBody)}</p>
-          </div>
+          <details class="lesson-extra-explanation">
+            <summary>Explicação aprofundada: ${escapeHtml(lvl.analogyTitle)}</summary>
+            <p>${escapeHtml(lvl.analogyBody)}</p>
+            <p><strong>Conexão com etapas anteriores:</strong> ${escapeHtml(lvl.spiralConnection)}</p>
+          </details>
 
           <!-- Dissected Topics -->
           <div class="space-y-4">
-            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">Assuntos & Dissecação de Sintaxe</h3>
+            <h3 class="text-base font-bold text-slate-200">Conceitos do nível <span class="text-sm font-normal text-slate-400">• abra um cartão por vez</span></h3>
             ${topicsHtml}
           </div>
 
           <!-- Call to Action to Complete 5 Dimensions -->
           <div class="bg-emerald-950/30 border border-emerald-500/30 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div class="space-y-1">
-              <h4 class="text-sm font-bold text-emerald-300">Pronto para comprovar domínio no Nível ${lvl.id}?</h4>
+              <h4 class="text-sm font-bold text-emerald-300">Pronto para concluir os critérios do Nível ${lvl.id}?</h4>
               <p class="text-xs text-slate-300">Responda às questões de Compreensão, Interpretação e Depuração e valide seu código no Laboratório e no Projeto.</p>
             </div>
             <button onclick="switchLessonSubtab('avaliacao')" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold shrink-0 transition">
@@ -2526,9 +2839,9 @@
       const qObj = lvl.dimensions[dimKey];
       const fb = document.getElementById(`dim-feedback-${levelId}-${dimKey}`);
 
+      if (comp.dimensions[dimKey]) return;
       comp.attempts = (comp.attempts || 0) + 1;
       comp.lastUpdated = TODAY_ISO;
-
       if (chosenIdx === qObj.correct) {
         comp.correctCount = (comp.correctCount || 0) + 1;
         if (!comp.dimensions[dimKey]) {
@@ -2539,6 +2852,8 @@
         saveStudentState();
         renderLevelsSidebar();
         renderActiveLesson();
+        renderCourseStartPanel();
+        renderLearningRoadmap();
         showToast(`Evidência "${dimKey}" comprovada no Nível ${levelId}!`, "✅");
       } else {
         recordStudentError(levelId, `Avaliação (${dimKey})`, `Erro em: ${qObj.q}`);
@@ -2548,7 +2863,7 @@
         if (fb) {
           fb.classList.remove('hidden');
           fb.className = "text-xs text-rose-200 bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-lg";
-          fb.textContent = "❌ Resposta incorreta. Revise a explicação técnica da aula e tente novamente.";
+          fb.textContent = `❌ Resposta incorreta. Resposta correta: ${qObj.options[qObj.correct]}. ${qObj.explanation}`;
         }
       }
     }
@@ -2716,15 +3031,22 @@
     function loadLabExercise(exId) {
       const ex = labExercises.find(e => e.id === exId) || labExercises[0];
       activeLabExerciseId = ex.id;
-      const saved = studentState.exerciseResponses[ex.id] || { userCode: ex.starterCode, passed: false };
+      const saved = studentState.exerciseResponses[ex.id] || { userCode: buildExerciseScaffold(ex), passed: false, attemptCount: 0 };
 
       document.getElementById('lab-exercise-title').textContent = ex.title;
       document.getElementById('lab-exercise-desc').textContent = ex.desc;
-      document.getElementById('python-code-editor').value = saved.userCode || ex.starterCode;
+      document.getElementById('python-code-editor').value = saved.userCode || buildExerciseScaffold(ex);
       document.getElementById('python-stdin-box').value = ex.stdin || "";
       document.getElementById('lab-expected-output').textContent = ex.expectedOutput;
       document.getElementById('lab-actual-output').textContent = saved.lastOutput || "—";
       document.getElementById('lab-hint-box').classList.add('hidden');
+      document.getElementById('lab-expected-output').classList.add('hidden');
+      document.getElementById('lab-reference-box').classList.add('hidden');
+      document.getElementById('lab-show-expected-btn').classList.toggle('hidden', (saved.attemptCount || 0) < 1);
+      document.getElementById('lab-show-reference-btn').classList.toggle('hidden', (saved.attemptCount || 0) < 2);
+      document.getElementById('lab-show-expected-btn').textContent = "Ver resultado do exemplo";
+      document.getElementById('lab-show-reference-btn').textContent = "Ver solução comentada após 2 tentativas";
+      document.getElementById('lab-reference-code').textContent = ex.starterCode;
 
       const badge = document.getElementById('lab-exercise-status-badge');
       if (saved.passed) {
@@ -2745,21 +3067,44 @@
       }
     }
 
-    function saveCurrentLabExerciseCode() {
+    function toggleLabExpectedOutput() {
+      const output = document.getElementById("lab-expected-output");
+      const button = document.getElementById("lab-show-expected-btn");
+      if (!output || !button) return;
+      const willShow = output.classList.contains("hidden");
+      output.classList.toggle("hidden", !willShow);
+      button.textContent = willShow ? "Ocultar resultado do exemplo" : "Ver resultado do exemplo";
+    }
+
+    function toggleLabReferenceSolution() {
+      const box = document.getElementById("lab-reference-box");
+      const button = document.getElementById("lab-show-reference-btn");
+      const saved = studentState.exerciseResponses[activeLabExerciseId];
+      if (!box || !button || !saved || (saved.attemptCount || 0) < 2) return;
+      const willShow = box.classList.contains("hidden");
+      box.classList.toggle("hidden", !willShow);
+      button.textContent = willShow ? "Ocultar solução de referência" : "Ver solução comentada";
+    }
+
+    function saveCurrentLabExerciseCode(silent = false) {
       const code = document.getElementById('python-code-editor').value;
       if (!studentState.exerciseResponses[activeLabExerciseId]) {
         studentState.exerciseResponses[activeLabExerciseId] = {};
       }
+      if (studentState.exerciseResponses[activeLabExerciseId].userCode === code) {
+        if (!silent) showToast("Este rascunho já está salvo.", "💾");
+        return;
+      }
       studentState.exerciseResponses[activeLabExerciseId].userCode = code;
       studentState.exerciseResponses[activeLabExerciseId].updatedAt = TODAY_ISO;
       saveStudentState();
-      showToast("Código do exercício salvo localmente!", "💾");
+      if (!silent) showToast("Rascunho do exercício salvo.", "💾");
     }
 
     function resetCurrentLabExerciseCode() {
       const ex = labExercises.find(e => e.id === activeLabExerciseId);
       if (!ex) return;
-      document.getElementById('python-code-editor').value = ex.starterCode;
+      document.getElementById('python-code-editor').value = buildExerciseScaffold(ex);
       saveCurrentLabExerciseCode();
       showToast("Código inicial restaurado.", "↺");
     }
@@ -3688,11 +4033,23 @@
       stdoutBox.textContent = "Executando script Python...";
       stderrBox.classList.add('hidden');
 
+      if (validateAgainstExpected) {
+        const response = studentState.exerciseResponses[activeLabExerciseId];
+        if (response.lastAttemptCode !== code) response.attemptCount = (response.attemptCount || 0) + 1;
+        response.lastAttemptCode = code;
+        saveStudentState();
+      }
+
       const res = await executePythonCodeEngine(code, stdinText);
       timeBox.textContent = `${res.ms} ms`;
 
       const ex = labExercises.find(e => e.id === activeLabExerciseId);
       const comp = studentState.competencies[ex.level];
+      const exerciseResponse = studentState.exerciseResponses[activeLabExerciseId];
+      if (validateAgainstExpected) {
+        document.getElementById('lab-show-expected-btn').classList.remove('hidden');
+        if ((exerciseResponse.attemptCount || 0) >= 2) document.getElementById('lab-show-reference-btn').classList.remove('hidden');
+      }
 
       if (!res.ok) {
         stdoutBox.textContent = res.stdout || "(Sem saída stdout)";
@@ -3710,12 +4067,16 @@
       studentState.exerciseResponses[activeLabExerciseId].lastOutput = res.stdout.trim();
 
       if (validateAgainstExpected && ex) {
-        comp.attempts = (comp.attempts || 0) + 1;
+        const wasAlreadyPassed = Boolean(exerciseResponse.passed);
+        comp.attempts = (comp.attempts || 0) + (exerciseResponse.lastCountedAttemptCode === code ? 0 : 1);
+        exerciseResponse.lastCountedAttemptCode = code;
         const expected = ex.expectedOutput.trim();
         const actual = res.stdout.trim();
 
-        if (actual === expected) {
-          comp.correctCount = (comp.correctCount || 0) + 1;
+        const requiredTokens = EXERCISE_REQUIRED_TOKENS[ex.id] || [];
+        const hasStructure = hasRequiredPythonElements(code, requiredTokens);
+        if (actual === expected && hasStructure) {
+          if (!wasAlreadyPassed) comp.correctCount = (comp.correctCount || 0) + 1;
           studentState.exerciseResponses[activeLabExerciseId].passed = true;
           if (!comp.dimensions.construction) {
             comp.dimensions.construction = true;
@@ -3726,13 +4087,18 @@
           initLabExerciseDropdown();
           renderLevelsSidebar();
           verdictBox.className = "text-xs font-bold text-emerald-400 bg-emerald-950/50 border border-emerald-500/40 p-2.5 rounded-lg";
-          verdictBox.textContent = `✅ Saída idêntica ao esperado! Dimensão 3 (Construção de Código) comprovada no Nível ${ex.level}!`;
+          verdictBox.textContent = `✅ O caso do exercício e os elementos de código esperados foram conferidos. Construção registrada no Nível ${ex.level}.`;
           showToast(`Exercício do Nível ${ex.level} validado com sucesso! +50 XP`, "🎯");
         } else {
-          recordStudentError(ex.level, "Resultado Divergente no Lab", `Esperado '${expected}', obteve '${actual}'`);
+          const reason = actual !== expected
+            ? `Saída do exemplo: esperada '${expected}', obtida '${actual}'`
+            : `A saída confere, mas faltam estruturas solicitadas: ${requiredTokens.filter(token => !stripPythonComments(code).includes(token)).join(", ")}`;
+          recordStudentError(ex.level, "Resultado Divergente no Lab", reason);
           saveStudentState();
           verdictBox.className = "text-xs font-semibold text-amber-300 bg-amber-950/50 border border-amber-500/40 p-2.5 rounded-lg";
-          verdictBox.textContent = `⚠️ O código rodou sem erros, mas a saída obtida ("${actual}") difere da esperada ("${expected}").`;
+          verdictBox.textContent = actual !== expected
+            ? `⚠️ A saída obtida ("${actual}") difere da saída deste exemplo. Use a dica, ajuste e tente novamente.`
+            : `⚠️ A saída confere, mas ainda faltam elementos pedidos no enunciado. Revise: ${requiredTokens.filter(token => !stripPythonComments(code).includes(token)).join(", ")}.`;
         }
       }
     }
@@ -3740,8 +4106,10 @@
     // =========================================================================
     // 13. VIEW 4: INTELLIGENT SPACED REPETITION SYSTEM (SRS) WITH REAL DATES
     // =========================================================================
-    let currentSrsLevelFilter = "all";
-    let currentSrsTopicFilter = "all";
+    const requestedSrsLevel = initialCourseParams.get("srsLevel");
+    let currentSrsLevelFilter = requestedSrsLevel === "due" || requestedSrsLevel === "all" || courseLevels.some(level => String(level.id) === requestedSrsLevel) ? requestedSrsLevel : "all";
+    const requestedSrsTopic = initialCourseParams.get("srsTopic");
+    let currentSrsTopicFilter = ["all", "sintaxe", "fluxo", "estruturas", "funcoes", "poo_arquivos", "avancado"].includes(requestedSrsTopic) ? requestedSrsTopic : "all";
 
     function addDaysToIso(isoDateStr, days) {
       const d = new Date(isoDateStr + "T12:00:00Z");
@@ -3750,7 +4118,7 @@
     }
 
     function isCardDueToday(card) {
-      return !card.nextReviewAt || card.nextReviewAt <= TODAY_ISO;
+      return (card.reviewCount || 0) > 0 && (!card.nextReviewAt || card.nextReviewAt <= TODAY_ISO);
     }
 
     function rebuildFilteredSrsQueue() {
@@ -3772,7 +4140,9 @@
         const aDue = isCardDueToday(a) ? 0 : 1;
         const bDue = isCardDueToday(b) ? 0 : 1;
         if (aDue !== bDue) return aDue - bDue;
-        if (a.nextReviewAt !== b.nextReviewAt) return a.nextReviewAt.localeCompare(b.nextReviewAt);
+        const aDate = a.nextReviewAt || "9999-12-31";
+        const bDate = b.nextReviewAt || "9999-12-31";
+        if (aDate !== bDate) return aDate.localeCompare(bDate);
         return (a.masteryIndex || 0) - (b.masteryIndex || 0);
       });
 
@@ -3784,12 +4154,14 @@
       currentSrsLevelFilter = levelVal;
       rebuildFilteredSrsQueue();
       renderSrsCard();
+      if (activeView === "srs") updateCourseUrl();
     }
 
     function filterSrsByTopic(topicVal) {
       currentSrsTopicFilter = topicVal;
       rebuildFilteredSrsQueue();
       renderSrsCard();
+      if (activeView === "srs") updateCourseUrl();
     }
 
     function renderSrsCard() {
@@ -3810,11 +4182,11 @@
       document.getElementById('srs-card-level-tag').textContent = `Nível ${card.level} • ${card.difficulty}`;
       const metaEl = document.getElementById('srs-card-meta-tag');
       if (metaEl) {
-        metaEl.textContent = `Domínio: ${card.masteryIndex}% • Revisões: ${card.reviewCount} • Intervalo: ${card.intervalDays}d`;
+        metaEl.textContent = `Autoavaliação: ${card.masteryIndex}% • Revisões: ${card.reviewCount} • Intervalo: ${card.intervalDays}d`;
       }
       document.getElementById('srs-card-counter').textContent = `Cartão ${currentSrsIndex + 1} de ${filteredSrsDeck.length}`;
       document.getElementById('srs-question-text').textContent = card.q;
-      document.getElementById('srs-question-hint').textContent = `Assunto: ${card.topic.toUpperCase()} • Criado em: ${card.createdAt}`;
+      document.getElementById('srs-question-hint').textContent = `Assunto: ${card.topic.toUpperCase()} • ${card.reviewCount ? `Revisado ${card.reviewCount} vez(es)` : "Cartão novo • disponível para estudo; ainda não entra na fila de vencidos"}`;
 
       const directEl = document.getElementById('srs-answer-direct');
       if (directEl) directEl.textContent = card.a;
@@ -3823,8 +4195,8 @@
 
       const schedEl = document.getElementById('srs-schedule-info');
       if (schedEl) {
-        const dueTxt = isCardDueToday(card) ? "Vencido Hoje" : `Agendado para ${card.nextReviewAt}`;
-        schedEl.textContent = `Última revisão: ${card.lastReviewedAt || 'Nunca'} | Próxima: ${dueTxt}`;
+        const dueTxt = !card.reviewCount ? "Cartão novo: a data será definida após sua resposta" : isCardDueToday(card) ? "Vencido hoje" : `Agendado para ${card.nextReviewAt}`;
+        schedEl.textContent = `Última revisão: ${card.lastReviewedAt || 'Ainda não revisado'} | Próxima: ${dueTxt}`;
       }
 
       const ansBox = document.getElementById('srs-answer-box');
@@ -3833,6 +4205,10 @@
       } else {
         ansBox.classList.add('hidden');
       }
+      document.querySelectorAll('#srs-rating-buttons button').forEach(button => {
+        button.disabled = !isSrsFlipped;
+        button.title = isSrsFlipped ? "Registre como foi lembrar" : "Revele a resposta antes de se autoavaliar";
+      });
     }
 
     function flipSrsCard() {
@@ -3888,6 +4264,10 @@
 
     function rateSrsCard(rating) {
       if (filteredSrsDeck.length === 0) return;
+      if (!isSrsFlipped) {
+        showToast("Tente responder e revele a explicação antes de registrar sua autoavaliação.", "🧠");
+        return;
+      }
       const card = filteredSrsDeck[currentSrsIndex];
       const sched = computeNextSrsSchedule(card, rating);
 
@@ -3916,7 +4296,7 @@
       currentSrsIndex = (currentSrsIndex + 1) % filteredSrsDeck.length;
       renderSrsCard();
 
-      showToast(`Cartão agendado para ${card.nextReviewAt} (Intervalo: ${card.intervalDays}d • Domínio: ${card.masteryIndex}%)`, "🧠");
+      showToast(`Próxima revisão: ${card.nextReviewAt} • intervalo ${card.intervalDays} dia(s)`, "🧠");
     }
 
     function updateSrsStatsAndTable() {
@@ -3924,26 +4304,26 @@
       const dueCount = all.filter(c => isCardDueToday(c)).length;
       const shortCount = all.filter(c => !isCardDueToday(c) && c.intervalDays >= 1 && c.intervalDays <= 3).length;
       const midCount = all.filter(c => !isCardDueToday(c) && c.intervalDays > 3 && c.intervalDays < 21).length;
-      // Only consider dominated when interval >= 21 days AND masteryIndex >= 40
-      const dominatedCount = all.filter(c => !isCardDueToday(c) && c.intervalDays >= 21 && c.masteryIndex >= 40).length;
+      const longIntervalCount = all.filter(c => !isCardDueToday(c) && c.intervalDays >= 21).length;
 
       document.getElementById('srs-stat-due').textContent = dueCount;
       document.getElementById('srs-stat-hard').textContent = shortCount;
       document.getElementById('srs-stat-good').textContent = midCount;
-      document.getElementById('srs-stat-easy').textContent = dominatedCount;
+      document.getElementById('srs-stat-easy').textContent = longIntervalCount;
       document.getElementById('srs-badge').textContent = dueCount;
 
       const tbody = document.getElementById('srs-history-table-body');
       if (tbody) {
         tbody.innerHTML = all.map(c => {
           const isDue = isCardDueToday(c);
+          const nextReview = !c.reviewCount ? "Novo" : isDue ? `Vencido (${c.nextReviewAt})` : c.nextReviewAt;
           return `
             <tr class="hover:bg-slate-800/40">
               <td class="p-2.5 font-mono text-indigo-300">#${c.id} (N${c.level})</td>
               <td class="p-2.5 max-w-xs truncate" title="${escapeHtml(c.q)}">${escapeHtml(c.q)}</td>
               <td class="p-2.5 font-mono">${c.reviewCount}</td>
               <td class="p-2.5 font-mono text-slate-400">${c.lastReviewedAt || '—'}</td>
-              <td class="p-2.5 font-mono ${isDue ? 'text-amber-400 font-bold' : 'text-emerald-400'}">${isDue ? 'Hoje (' + c.nextReviewAt + ')' : c.nextReviewAt}</td>
+              <td class="p-2.5 font-mono ${isDue ? 'text-amber-400 font-bold' : c.reviewCount ? 'text-emerald-400' : 'text-slate-400'}">${escapeHtml(nextReview)}</td>
               <td class="p-2.5 font-mono">${c.intervalDays}d</td>
               <td class="p-2.5">
                 <div class="flex items-center gap-2">
@@ -3960,6 +4340,7 @@
     }
 
     function resetSrsDeck() {
+      if (!window.confirm("Isso apaga somente o histórico e os agendamentos dos flashcards. Deseja continuar?")) return;
       studentState.srsCards = createInitialSrsDeck();
       saveStudentState();
       rebuildFilteredSrsQueue();
@@ -4013,14 +4394,14 @@
           </span>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
           <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1">
             <div class="font-bold text-indigo-300">🎯 Objetivo & Conhecimentos Necessários</div>
             <p class="text-slate-300">${escapeHtml(proj.objective)}</p>
             <p class="text-slate-400 pt-1"><strong>Base:</strong> ${escapeHtml(proj.knowledgeNeeded)}</p>
           </div>
           <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 space-y-1">
-            <div class="font-bold text-amber-300">⚡ Desafios & Critérios de Avaliação</div>
+            <div class="font-bold text-amber-300">⚡ Desafio & conferência</div>
             <p class="text-slate-300">${escapeHtml(proj.challenges)}</p>
             <p class="text-emerald-300 pt-1"><strong>Critério:</strong> ${escapeHtml(proj.criteria)}</p>
           </div>
@@ -4028,12 +4409,12 @@
 
         <!-- Checkable Steps -->
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-3.5 space-y-2">
-          <div class="text-xs font-bold uppercase text-slate-400">Etapas de Implementação:</div>
+          <div class="text-sm font-bold text-slate-200">Etapas de implementação • marque depois de fazer:</div>
           <div class="space-y-1.5">
             ${proj.steps.map((st, sIdx) => {
               const checked = pState.completedSteps.includes(sIdx);
               return `
-                <label class="flex items-center gap-2.5 text-xs text-slate-200 cursor-pointer">
+                <label class="flex items-center gap-2.5 text-sm text-slate-200 cursor-pointer">
                   <input type="checkbox" ${checked ? 'checked' : ''} onchange="toggleProjectStep(${proj.id}, ${sIdx})" class="rounded bg-slate-950 border-slate-700 text-indigo-600" />
                   <span>${sIdx + 1}. ${escapeHtml(st)}</span>
                 </label>
@@ -4042,20 +4423,29 @@
           </div>
         </div>
 
+        ${[8, 10, 12].includes(proj.level) ? `<p class="project-scope-note">Escopo desta atividade: simulação local da lógica. Ela não conecta a um banco real, não inicia um servidor HTTP e não chama um modelo de IA.</p>` : ""}
+
         <!-- Project Code Workspace -->
         <div class="space-y-2">
           <div class="flex items-center justify-between">
-            <label for="project-code-editor" class="text-xs font-bold uppercase text-slate-400">Código da Solução (<code class="code-font">projeto_nivel_${proj.level}.py</code>)</label>
-            <span class="text-xs text-slate-400">Saída esperada: <code class="code-font text-indigo-300">${escapeHtml(proj.expectedOutput)}</code></span>
+            <label for="project-code-editor" class="text-sm font-bold text-slate-300">Seu código (<code class="code-font">projeto_nivel_${proj.level}.py</code>)</label>
           </div>
-          <textarea id="project-code-editor" rows="7" spellcheck="false" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 code-font text-xs sm:text-sm text-emerald-200 focus:outline-none focus:border-indigo-500">${escapeHtml(pState.userCode)}</textarea>
+          <textarea id="project-code-editor" rows="9" spellcheck="false" onblur="saveProjectDraft(${proj.id}, true)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3.5 code-font text-sm text-emerald-200 focus:outline-none focus:border-indigo-500">${escapeHtml(pState.userCode)}</textarea>
           <div class="flex flex-wrap items-center gap-2">
+            <button onclick="saveProjectDraft(${proj.id})" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-medium">💾 Salvar rascunho</button>
             <button onclick="runAndValidateProject(${proj.id})" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold transition shadow">
-              ▶ Executar & Validar Projeto Prático
+              ▶ Executar e conferir o caso
             </button>
             <button onclick="resetProjectCode(${proj.id})" class="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium">
-              ↺ Restaurar Modelo Base
+              ↺ Limpar e recomeçar
             </button>
+            <button id="project-show-expected-btn" onclick="toggleProjectExpectedOutput(${proj.id})" class="${(pState.attemptCount || 0) < 1 ? "hidden" : ""} px-3 py-2 rounded-xl bg-slate-800 text-slate-200 text-sm font-medium">Ver saída do exemplo</button>
+            <button id="project-show-reference-btn" onclick="toggleProjectReferenceSolution(${proj.id})" class="${(pState.attemptCount || 0) < 2 ? "hidden" : ""} px-3 py-2 rounded-xl bg-slate-800 text-amber-200 text-sm font-medium">Ver solução de referência</button>
+          </div>
+          <pre id="project-expected-output" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-3 code-font text-sm text-indigo-300 whitespace-pre-wrap">${escapeHtml(proj.expectedOutput)}</pre>
+          <div id="project-reference-box" class="hidden bg-slate-900 border border-amber-500/30 rounded-xl p-3 space-y-2">
+            <p class="text-sm text-amber-200">Compare a solução com suas decisões; depois feche e tente reconstruí-la sem consultar.</p>
+            <pre class="code-font text-sm text-emerald-200 whitespace-pre-wrap">${escapeHtml(proj.starterCode)}</pre>
           </div>
           <pre id="project-output-box" class="bg-slate-900 border border-slate-800 rounded-xl p-3 code-font text-xs text-slate-300 whitespace-pre-wrap"># Execute o projeto para validar o resultado esperado e registrar no seu portfólio.</pre>
         </div>
@@ -4086,10 +4476,13 @@
     function selectProject(id) {
       activeProjectId = id;
       renderProjectsSection();
+      updateCourseUrl();
     }
 
     function toggleProjectStep(projId, stepIdx) {
       const st = studentState.projects[projId];
+      const editor = document.getElementById("project-code-editor");
+      if (editor) st.userCode = editor.value;
       const pos = st.completedSteps.indexOf(stepIdx);
       if (pos >= 0) st.completedSteps.splice(pos, 1);
       else st.completedSteps.push(stepIdx);
@@ -4101,19 +4494,56 @@
     function resetProjectCode(projId) {
       const proj = practicalProjects.find(p => p.id === projId);
       if (!proj) return;
-      studentState.projects[projId].userCode = proj.starterCode;
+      studentState.projects[projId].userCode = buildProjectScaffold(proj);
       saveStudentState();
       renderProjectsSection();
+    }
+
+    function toggleProjectExpectedOutput(projId) {
+      const output = document.getElementById("project-expected-output");
+      const button = document.getElementById("project-show-expected-btn");
+      if (!output || !button || (studentState.projects[projId]?.attemptCount || 0) < 1) return;
+      const willShow = output.classList.contains("hidden");
+      output.classList.toggle("hidden", !willShow);
+      button.textContent = willShow ? "Ocultar saída do exemplo" : "Ver saída do exemplo";
+    }
+
+    function toggleProjectReferenceSolution(projId) {
+      const box = document.getElementById("project-reference-box");
+      const button = document.getElementById("project-show-reference-btn");
+      if (!box || !button || (studentState.projects[projId]?.attemptCount || 0) < 2) return;
+      const willShow = box.classList.contains("hidden");
+      box.classList.toggle("hidden", !willShow);
+      button.textContent = willShow ? "Ocultar solução de referência" : "Ver solução de referência";
+    }
+
+    function saveProjectDraft(projId, silent = false) {
+      const projectState = studentState.projects[projId];
+      const editor = document.getElementById("project-code-editor");
+      if (!projectState || !editor) return;
+      if (projectState.userCode === editor.value) {
+        if (!silent) showToast("Este rascunho já está salvo.", "💾");
+        return;
+      }
+      projectState.userCode = editor.value;
+      if (projectState.status === "nao_iniciado") projectState.status = "em_andamento";
+      saveStudentState();
+      if (!silent) showToast("Rascunho do projeto salvo.", "💾");
     }
 
     async function runAndValidateProject(projId) {
       const proj = practicalProjects.find(p => p.id === projId);
       const st = studentState.projects[projId];
       const code = document.getElementById('project-code-editor').value;
-      const outBox = document.getElementById('project-output-box');
+      let outBox = document.getElementById('project-output-box');
 
       st.userCode = code;
+      if (st.lastAttemptCode !== code) st.attemptCount = (st.attemptCount || 0) + 1;
+      st.lastAttemptCode = code;
       if (st.status === "nao_iniciado") st.status = "em_andamento";
+      saveStudentState();
+      if (st.attemptCount >= 1) document.getElementById("project-show-expected-btn")?.classList.remove("hidden");
+      if (st.attemptCount >= 2) document.getElementById("project-show-reference-btn")?.classList.remove("hidden");
 
       const res = await executePythonCodeEngine(code, "");
       if (!res.ok) {
@@ -4125,11 +4555,13 @@
 
       const actual = res.stdout.trim();
       const expected = proj.expectedOutput.trim();
-      if (actual === expected) {
+      const missingSteps = proj.steps.map((_, index) => index).filter(index => !st.completedSteps.includes(index));
+      const requiredTokens = PROJECT_REQUIRED_TOKENS[proj.id] || [];
+      const hasStructure = hasRequiredPythonElements(code, requiredTokens);
+      if (actual === expected && missingSteps.length === 0 && hasStructure) {
         st.status = "concluido";
         st.passedChecks = true;
         st.completedAt = TODAY_ISO;
-        st.completedSteps = proj.steps.map((_, idx) => idx);
 
         const comp = studentState.competencies[proj.level];
         if (!comp.dimensions.application) {
@@ -4140,13 +4572,16 @@
         saveStudentState();
         renderProjectsSection();
         renderLevelsSidebar();
-        outBox.className = "bg-emerald-950/50 border border-emerald-500/40 rounded-xl p-3 code-font text-xs text-emerald-300 whitespace-pre-wrap";
-        outBox.textContent = `✅ Saída Validada: ${actual}\nProjeto aprovado e adicionado ao Portfólio! Dimensão 5 (Aplicação Prática) comprovada no Nível ${proj.level}.`;
+        outBox = document.getElementById('project-output-box');
+        outBox.className = "bg-emerald-950/50 border border-emerald-500/40 rounded-xl p-3 code-font text-sm text-emerald-300 whitespace-pre-wrap";
+        outBox.textContent = `✅ Saída do caso e elementos essenciais conferidos. Você marcou as etapas como concluídas. Projeto registrado no portfólio do Nível ${proj.level}.`;
         showToast(`Projeto do Nível ${proj.level} concluído! +100 XP`, "🏆");
       } else {
         saveStudentState();
-        outBox.className = "bg-amber-950/50 border border-amber-500/40 rounded-xl p-3 code-font text-xs text-amber-200 whitespace-pre-wrap";
-        outBox.textContent = `Saída obtida: "${actual}"\nSaída esperada pelo critério: "${expected}"`;
+        outBox.className = "bg-amber-950/50 border border-amber-500/40 rounded-xl p-3 code-font text-sm text-amber-200 whitespace-pre-wrap";
+        if (actual !== expected) outBox.textContent = `A saída deste caso ainda não confere.\nObtida: "${actual}"\nUse a dica e tente novamente.`;
+        else if (!hasStructure) outBox.textContent = `A saída confere, mas ainda faltam elementos pedidos no enunciado: ${requiredTokens.filter(token => !stripPythonComments(code).includes(token)).join(", ")}.`;
+        else outBox.textContent = `Código e saída conferem. Marque cada etapa após realizá-la para registrar a aplicação no portfólio. Pendentes: ${missingSteps.length}.`;
       }
     }
 
@@ -4157,18 +4592,19 @@
       const m = computeGlobalMetrics();
       const dueCards = studentState.srsCards.filter(c => isCardDueToday(c)).length;
       const reviewedCards = studentState.srsCards.filter(c => c.reviewCount > 0);
-      const avgRetention = reviewedCards.length > 0
+      const avgSelfRating = reviewedCards.length > 0
         ? Math.round(reviewedCards.reduce((acc, c) => acc + c.masteryIndex, 0) / reviewedCards.length)
         : 0;
+      const newCards = studentState.srsCards.filter(card => !card.reviewCount).length;
       const studyMinutes = Math.floor(studentState.studyTimeSeconds / 60);
 
       document.getElementById('dash-kpi-progress').textContent = `${Math.round((m.dominatedCount / 12) * 100)}%`;
-      document.getElementById('dash-kpi-progress-sub').textContent = `${m.dominatedCount} de 12 níveis dominados`;
+      document.getElementById('dash-kpi-progress-sub').textContent = `${m.dominatedCount} de 12 etapas concluídas`;
       document.getElementById('dash-kpi-inprogress').textContent = String(m.inProgressCount);
       document.getElementById('dash-kpi-accuracy').textContent = `${m.accuracyPct}%`;
       document.getElementById('dash-kpi-accuracy-sub').textContent = `${m.totalCorrect} acertos / ${m.totalAttempts} tent.`;
-      document.getElementById('dash-kpi-retention').textContent = `${avgRetention}%`;
-      document.getElementById('dash-kpi-due-sub').textContent = `${dueCards} vencidos hoje`;
+      document.getElementById('dash-kpi-retention').textContent = `${avgSelfRating}%`;
+      document.getElementById('dash-kpi-due-sub').textContent = `${dueCards} vencidos • ${newCards} novos`;
       document.getElementById('dash-kpi-time').textContent = `${studyMinutes} min`;
       document.getElementById('dash-kpi-sessions-sub').textContent = `${studentState.studySessions.length} sessões registradas`;
       document.getElementById('dash-kpi-projects').textContent = `${m.completedProjects} / 12`;
@@ -4186,7 +4622,7 @@
       if (dueCards > 0) {
         recs.push({
           title: `Revisar ${dueCards} Flashcards Vencidos Hoje`,
-          desc: `Mantenha a curva de retenção alta respondendo aos cartões prioritários no módulo SRS.`,
+          desc: `A fila contém cartões com data de revisão atingida. A resposta registrada é uma autoavaliação, não um teste objetivo de retenção.`,
           action: () => switchView('srs')
         });
       }
@@ -4196,7 +4632,7 @@
         const done = [d.conceptual, d.interpretation, d.construction, d.debugging, d.application].filter(Boolean).length;
         recs.push({
           title: `Avançar no Nível ${nextLevelToMaster.id}: ${nextLevelToMaster.title} (${done}/5 evidências)`,
-          desc: `Complete as dimensões pendentes (Avaliação, Laboratório Python e Projeto) para conquistar o status Dominado.`,
+          desc: `Conclua os critérios restantes: questões, exercício com caso de saída e projeto com etapas marcadas.`,
           action: () => { selectLevel(nextLevelToMaster.id); switchLessonSubtab('avaliacao'); switchView('trilha'); }
         });
       }
@@ -4278,6 +4714,7 @@
       }
 
       const all = studentState.srsCards;
+      const newCards = all.filter(c => !c.reviewCount).length;
       const due = all.filter(c => isCardDueToday(c)).length;
       const shortInt = all.filter(c => !isCardDueToday(c) && c.intervalDays >= 1 && c.intervalDays <= 3).length;
       const midInt = all.filter(c => !isCardDueToday(c) && c.intervalDays > 3 && c.intervalDays < 21).length;
@@ -4289,10 +4726,10 @@
         srsChartInstance = new Chart(ctx2, {
           type: 'doughnut',
           data: {
-            labels: ['Vencidos Hoje', 'Curto Prazo (1-3d)', 'Médio Prazo (7-20d)', 'Longo Prazo (21d+)'],
+            labels: ['Novos', 'Vencidos', 'Curto Prazo (1-3d)', 'Médio Prazo (4-20d)', 'Longo Prazo (21d+)'],
             datasets: [{
-              data: [due, shortInt, midInt, domInt],
-              backgroundColor: ['#f59e0b', '#f43f5e', '#6366f1', '#10b981'],
+              data: [newCards, due, shortInt, midInt, domInt],
+              backgroundColor: ['#64748b', '#f59e0b', '#f43f5e', '#6366f1', '#10b981'],
               borderColor: '#0f172a',
               borderWidth: 2
             }]
@@ -4356,13 +4793,15 @@
     // 17. VIEW 8: ADAPTIVE SCHEDULE & STUDY SESSION HISTORY
     // =========================================================================
     function setRoutinePace(minutes) {
-      studentState.preferences.dailyPaceMinutes = String(minutes);
-      saveStudentState();
+      const selectedPace = String(minutes);
+      const paceChanged = studentState.preferences.dailyPaceMinutes !== selectedPace;
+      studentState.preferences.dailyPaceMinutes = selectedPace;
+      if (paceChanged) saveStudentState();
 
       ['30', '60', '90'].forEach(m => {
         const btn = document.getElementById('pace-' + m);
         if (btn) {
-          btn.className = m === String(minutes)
+          btn.className = m === selectedPace
             ? "px-3 py-1.5 rounded-lg text-xs font-semibold bg-indigo-600 text-white"
             : "px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:text-white";
         }
@@ -4384,7 +4823,7 @@
         ],
         '90': [
           { step: "Bloco 1 • 20 min", title: `Auditoria SRS Completa (${dueCount} vencidos) + Erros`, desc: "Revise os cartões vencidos e elimine os pontos registrados no seu histórico de erros." },
-          { step: "Bloco 2 • 30 min", title: `Domínio das 5 Dimensões (Nível ${targetLvl.id})`, desc: "Conclua as avaliações de Compreensão, Interpretação, Construção e Depuração do nível atual." },
+          { step: "Bloco 2 • 30 min", title: `Prática guiada • Nível ${targetLvl.id}`, desc: "Responda às questões, pratique a depuração e confira os critérios de construção de código do nível atual." },
           { step: "Bloco 3 • 40 min", title: `Entrega de Projeto Prático & Portfólio`, desc: `Finalize e valide o código completo do Projeto do Nível ${targetLvl.id} para comprovar Aplicação Prática.` }
         ]
       };
@@ -4392,45 +4831,155 @@
       const container = document.getElementById('routine-breakdown');
       container.innerHTML = (plans[String(minutes)] || plans['60']).map(p => `
         <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-1.5">
-          <div class="text-xs font-bold text-emerald-400 uppercase">${escapeHtml(p.step)}</div>
-          <div class="text-sm font-bold text-white">${escapeHtml(p.title)}</div>
-          <p class="text-xs text-slate-300 leading-relaxed">${escapeHtml(p.desc)}</p>
+          <div class="text-sm font-bold text-emerald-300">${escapeHtml(p.step)}</div>
+          <div class="text-base font-bold text-white">${escapeHtml(p.title)}</div>
+          <p class="text-sm text-slate-300 leading-relaxed">${escapeHtml(p.desc)}</p>
         </div>
       `).join('');
+      renderStudyCalendar();
+    }
+
+    function getFirstIncompleteTopic() {
+      for (const level of courseLevels) {
+        const progress = studentState.topicProgress[level.id] || [];
+        const index = progress.findIndex(done => !done);
+        if (index >= 0) return { level, index };
+      }
+      return null;
+    }
+
+    function getFirstIncompleteLevel() {
+      return courseLevels.find(level => studentState.competencies[level.id].status !== "dominado") || courseLevels[0];
+    }
+
+    function getStudyTasksForDate(dateKey) {
+      const pace = Number(studentState.preferences.dailyPaceMinutes || 60);
+      const dueCount = studentState.srsCards.filter(card => card.reviewCount > 0 && card.nextReviewAt && card.nextReviewAt <= dateKey).length;
+      const nextTopic = getFirstIncompleteTopic();
+      const courseComplete = courseLevels.every(level => studentState.competencies[level.id].status === "dominado");
+      const targetLevel = nextTopic?.level || getFirstIncompleteLevel();
+      const exercise = labExercises.find(item => item.level === targetLevel.id);
+      const project = practicalProjects.find(item => item.level === targetLevel.id);
+      const exerciseDone = Boolean(studentState.exerciseResponses[exercise.id]?.passed);
+      const projectDone = Boolean(studentState.projects[project.id]?.passedChecks);
+      const blocks = pace === 30 ? [8, 12, 10] : pace === 90 ? [20, 30, 40] : [15, 20, 25];
+      return [
+        { id: "review", kind: "srs", minutes: blocks[0], title: dueCount ? `Revisar ${Math.min(dueCount, pace === 30 ? 5 : 10)} cartão(ões) agendado(s)` : "Estudar um cartão novo", desc: dueCount ? `${dueCount} cartão(ões) estarão vencidos até esta data.` : "Cartões novos ficam disponíveis sem serem contados como atraso.", label: "Abrir revisão" },
+        { id: "lesson", kind: "lesson", levelId: targetLevel.id, topicIndex: nextTopic?.index ?? 0, minutes: blocks[1], title: courseComplete ? `Revisão conceitual: ${targetLevel.topics[0].name}` : `Conceito: ${targetLevel.topics[nextTopic?.index ?? 0].name}`, desc: courseComplete ? "As 12 etapas foram concluídas. Revise conceitos, explique-os de memória e retome qualquer ponto que queira reforçar." : `${targetLevel.tag} • explique a ideia sem consultar o exemplo.`, label: courseComplete ? "Revisar conceito" : "Abrir conceito" },
+        exerciseDone
+          ? projectDone
+            ? { id: "practice", kind: "assessment", levelId: targetLevel.id, minutes: blocks[2], title: courseComplete ? "Recuperação ativa • Revisão geral" : `Recuperação ativa • Nível ${targetLevel.id}`, desc: "Responda às questões e revise os erros registrados.", label: "Abrir prática guiada" }
+            : { id: "practice", kind: "project", levelId: targetLevel.id, minutes: blocks[2], title: `Aplicação • ${project.title}`, desc: "Implemente e marque as etapas após realizá-las.", label: "Abrir projeto" }
+          : { id: "practice", kind: "lab", levelId: targetLevel.id, minutes: blocks[2], title: `Exercício • ${exercise.title}`, desc: "Escreva sua tentativa antes de revelar o resultado do exemplo.", label: "Abrir laboratório" }
+      ];
+    }
+
+    function formatCalendarDate(dateKey) {
+      return new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit", month: "short" })
+        .format(new Date(`${dateKey}T12:00:00`));
+    }
+
+    function renderStudyCalendar() {
+      const container = document.getElementById("study-calendar");
+      if (!container) return;
+      const days = Array.from({ length: 7 }, (_, offset) => {
+        const date = new Date(`${TODAY_ISO}T12:00:00`);
+        date.setDate(date.getDate() + offset);
+        return localDateKey(date);
+      });
+      const planned = days.reduce((sum, dateKey) => sum + getStudyTasksForDate(dateKey).length, 0);
+      const completed = days.reduce((sum, dateKey) => sum + Object.values(studentState.studyCalendar[dateKey] || {}).filter(Boolean).length, 0);
+      const summary = document.getElementById("calendar-week-summary");
+      if (summary) summary.textContent = `${completed}/${planned} blocos marcados`;
+      container.innerHTML = days.map((dateKey, dayIndex) => {
+        const tasks = getStudyTasksForDate(dateKey);
+        const doneCount = tasks.filter(task => Boolean(studentState.studyCalendar[dateKey]?.[task.id])).length;
+        return `<article class="calendar-day ${dayIndex === 0 ? "is-today" : ""}">
+          <header><div><strong>${dayIndex === 0 ? "Hoje" : escapeHtml(formatCalendarDate(dateKey))}</strong><span>${doneCount}/${tasks.length} blocos</span></div><progress max="${tasks.length}" value="${doneCount}" aria-label="${doneCount} de ${tasks.length} blocos concluídos"></progress></header>
+          <div class="calendar-tasks">${tasks.map(task => {
+            const checked = Boolean(studentState.studyCalendar[dateKey]?.[task.id]);
+            return `<div class="calendar-task ${checked ? "is-done" : ""}">
+              <label><input type="checkbox" ${checked ? "checked" : ""} onchange="markStudyCalendarTask('${dateKey}', '${task.id}', this.checked)" /><span><b>${task.minutes} min • ${escapeHtml(task.title)}</b><small>${escapeHtml(task.desc)}</small></span></label>
+              <button type="button" onclick="openStudyCalendarTask('${task.kind}', ${task.levelId || 0}, '${dateKey}')">${escapeHtml(task.label)} →</button>
+            </div>`;
+          }).join("")}</div>
+        </article>`;
+      }).join("");
+    }
+
+    function markStudyCalendarTask(dateKey, taskId, checked) {
+      if (!studentState.studyCalendar[dateKey]) studentState.studyCalendar[dateKey] = {};
+      studentState.studyCalendar[dateKey][taskId] = Boolean(checked);
+      saveStudentState();
+      renderStudyCalendar();
+    }
+
+    function openStudyCalendarTask(kind, levelId, dateKey) {
+      if (kind === "srs") {
+        const dueToday = studentState.srsCards.some(card => isCardDueToday(card));
+        const filter = document.getElementById("srs-filter");
+        if (filter) filter.value = dueToday ? "due" : "all";
+        filterSrsDeck(dueToday ? "due" : "all");
+        switchView("srs");
+      } else if (kind === "lesson") {
+        openRecommendedLesson(levelId);
+      } else if (kind === "lab") {
+        openLevelLabExercise(levelId);
+      } else if (kind === "project") {
+        openLevelProject(levelId);
+      } else {
+        selectLevel(levelId);
+        switchLessonSubtab("avaliacao");
+        switchView("trilha");
+      }
     }
 
     function renderAdaptiveSchedule() {
       setRoutinePace(studentState.preferences.dailyPaceMinutes || '60');
 
       const dueCount = studentState.srsCards.filter(c => isCardDueToday(c)).length;
-      const targetLvl = courseLevels.find(l => studentState.competencies[l.id].status !== "dominado") || courseLevels[0];
+      const topic = getFirstIncompleteTopic();
+      const targetLvl = topic?.level || getFirstIncompleteLevel();
       const nextStepText = document.getElementById('adaptive-next-step-text');
 
-      if (dueCount > 12) {
-        nextStepText.textContent = `Você possui ${dueCount} flashcards vencidos. Recomendamos iniciar por 10 minutos de Revisão Espaçada antes de avançar no Nível ${targetLvl.id}.`;
+      const latestError = studentState.errorHistory[0];
+      const exercise = labExercises.find(item => item.level === targetLvl.id);
+      const project = practicalProjects.find(item => item.level === targetLvl.id);
+      const exerciseDone = Boolean(studentState.exerciseResponses[exercise.id]?.passed);
+      const projectDone = Boolean(studentState.projects[project.id]?.passedChecks);
+
+      if (dueCount >= 5) {
+        nextStepText.textContent = `Há ${dueCount} cartões realmente vencidos. Faça uma rodada curta de recuperação e depois volte ao conceito pendente do Nível ${targetLvl.id}.`;
         window._adaptiveNextAction = () => switchView('srs');
+      } else if (latestError && latestError.levelId === targetLvl.id && !studentState.competencies[targetLvl.id].dimensions.debugging) {
+        nextStepText.textContent = `Retome o ponto do seu erro recente no Nível ${targetLvl.id}, releia o conceito e tente explicar a correção antes de responder novamente.`;
+        window._adaptiveNextAction = () => { selectLevel(targetLvl.id); switchLessonSubtab('aula'); switchView('trilha'); };
+      } else if (topic) {
+        nextStepText.textContent = `Continue pelo conceito ${topic.index + 1} de ${topic.level.topics.length} do Nível ${topic.level.id}: ${topic.level.topics[topic.index].name}.`;
+        window._adaptiveNextAction = () => openRecommendedLesson(topic.level.id);
+      } else if (!exerciseDone) {
+        nextStepText.textContent = `Os conceitos do Nível ${targetLvl.id} foram revisados. Agora resolva o exercício de código sem consultar a solução.`;
+        window._adaptiveNextAction = () => openLevelLabExercise(targetLvl.id);
+      } else if (!projectDone) {
+        nextStepText.textContent = `O exercício do Nível ${targetLvl.id} está concluído. Aplique o que aprendeu no projeto e marque as etapas realizadas.`;
+        window._adaptiveNextAction = () => openLevelProject(targetLvl.id);
       } else {
-        const comp = studentState.competencies[targetLvl.id];
-        if (!comp.dimensions.construction) {
-          nextStepText.textContent = `Seu próximo passo ideal é validar o exercício prático do Nível ${targetLvl.id} (${targetLvl.title}) no Laboratório Python.`;
-          window._adaptiveNextAction = () => openLevelLabExercise(targetLvl.id);
-        } else {
-          nextStepText.textContent = `Continue avançando nas evidências do Nível ${targetLvl.id} (${targetLvl.title}) para conquistar o status Dominado.`;
-          window._adaptiveNextAction = () => { selectLevel(targetLvl.id); switchLessonSubtab('avaliacao'); switchView('trilha'); };
-        }
+        nextStepText.textContent = `Continue a recuperação ativa e a revisão dos pontos que ainda não foram comprovados no Nível ${targetLvl.id}.`;
+        window._adaptiveNextAction = () => { selectLevel(targetLvl.id); switchLessonSubtab('avaliacao'); switchView('trilha'); };
       }
+      renderStudyCalendar();
 
       const histEl = document.getElementById('study-sessions-history-list');
       if (studentState.studySessions.length === 0) {
-        histEl.innerHTML = `<div class="text-slate-500 py-3 text-center">Nenhuma sessão registrada ainda. Clique em "Registrar Sessão de Estudo de Hoje" ao concluir seu bloco diário.</div>`;
+        histEl.innerHTML = `<div class="text-slate-400 py-3 text-center">Nenhuma sessão registrada. Estude por pelo menos um minuto com atividade recente e registre ao terminar.</div>`;
       } else {
         histEl.innerHTML = studentState.studySessions.map(s => `
           <div class="bg-slate-900 border border-slate-800 rounded-lg p-2.5 flex items-center justify-between">
             <div>
               <span class="font-bold text-emerald-400">${escapeHtml(s.date)}</span>
-              <span class="text-slate-300 ml-2">Ritmo planejado: ${escapeHtml(String(s.paceMinutes))} min • Tempo real acumulado: ${escapeHtml(String(s.totalMinutes))} min</span>
+              <span class="text-slate-300 ml-2">Plano: ${escapeHtml(String(s.paceMinutes))} min • Tempo ativo estimado: ${escapeHtml(String(s.totalMinutes))} min</span>
             </div>
-            <span class="font-mono text-indigo-300 font-semibold">${escapeHtml(String(s.xpSnapshot))} XP</span>
+            <span class="font-mono text-indigo-300 font-semibold">Concluída</span>
           </div>
         `).join('');
       }
@@ -4442,17 +4991,22 @@
 
     function logCompletedStudySession() {
       const pace = studentState.preferences.dailyPaceMinutes || "60";
-      const totalMinutes = Math.max(1, Math.floor(studentState.studyTimeSeconds / 60));
-      studentState.xp += 25;
+      const unloggedSeconds = Math.max(0, studentState.studyTimeSeconds - studentState.lastLoggedStudyTimeSeconds);
+      if (unloggedSeconds < 60) {
+        showToast("Registre a sessão depois de pelo menos 1 minuto de estudo ativo.", "⏱️");
+        return;
+      }
+      const totalMinutes = Math.floor(unloggedSeconds / 60);
+      studentState.lastLoggedStudyTimeSeconds = studentState.studyTimeSeconds;
       studentState.studySessions.unshift({
         date: TODAY_ISO,
         paceMinutes: pace,
-        totalMinutes,
-        xpSnapshot: studentState.xp
+        totalMinutes
       });
+      studentState.studySessions = studentState.studySessions.slice(0, 60);
       saveStudentState();
       renderAdaptiveSchedule();
-      showToast("Sessão de estudo registrada no histórico! +25 XP", "📅");
+      showToast("Tempo ativo estimado registrado no histórico.", "📅");
     }
 
     // =========================================================================
@@ -4467,14 +5021,20 @@
     }
 
     function renderAllViews() {
+      const srsLevelSelect = document.getElementById("srs-filter");
+      const srsTopicSelect = document.getElementById("srs-topic-filter");
+      if (srsLevelSelect) srsLevelSelect.value = currentSrsLevelFilter;
+      if (srsTopicSelect) srsTopicSelect.value = currentSrsTopicFilter;
       renderLevelsSidebar();
       renderActiveLesson();
+      renderCourseStartPanel();
       renderSimulator();
       initLabExerciseDropdown();
       rebuildFilteredSrsQueue();
       renderSrsCard();
       renderProjectsSection();
       renderIntentGrid();
+      renderLearningRoadmap();
       renderAdaptiveSchedule();
       updateProgressHeader();
     }
@@ -4488,4 +5048,5 @@
 
     window.addEventListener('DOMContentLoaded', () => {
       renderAllViews();
+      switchView(activeView, { replaceHistory: true });
     });

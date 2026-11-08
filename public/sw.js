@@ -1,4 +1,4 @@
-const CACHE_NAME = 'nexo-cursos-v5';
+const CACHE_NAME = 'nexo-cursos-v6';
 const APP_SHELL = [
   '/', '/index.html', '/manifest.webmanifest', '/marca.svg',
   '/python-course/index.html',
