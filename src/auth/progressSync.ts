@@ -1,6 +1,7 @@
 import {
   collection,
   doc,
+  enableNetwork,
   getDoc,
   getDocs,
   onSnapshot,
@@ -16,6 +17,7 @@ import {
   getBrowserLocalStorage as getStorage,
   SYNC_CHANGE_EVENT,
 } from './storageBridge';
+import { PROGRESS_SYNC_RETRY_EVENT } from './retrySignal';
 
 export type CloudProgressStatus = 'unconfigured' | 'signed-out' | 'syncing' | 'synced' | 'offline' | 'error';
 type ProgressStorageChange = { key: string; value: string | null };
@@ -25,6 +27,34 @@ type PendingChanges = Record<string, number>;
 const CHUNK_LENGTH = 180_000;
 const MAX_VALUE_LENGTH = 20_000_000;
 const SCHEMA_VERSION = 2;
+
+function errorCode(error: unknown) {
+  return typeof error === 'object' && error && 'code' in error ? String(error.code).toLowerCase() : '';
+}
+
+function errorText(error: unknown) {
+  return error instanceof Error ? error.message.toLowerCase() : String(error ?? '').toLowerCase();
+}
+
+function isTemporaryConnectionError(error: unknown) {
+  const code = errorCode(error);
+  const message = errorText(error);
+  return !navigator.onLine || ['unavailable', 'deadline-exceeded', 'aborted'].some((part) => code.includes(part))
+    || /client is offline|network|offline|webchannel|fetch failed|failed to get document/.test(message);
+}
+
+function readableSyncError(error: unknown, fallback: string) {
+  const code = errorCode(error);
+  const message = errorText(error);
+  if (code.includes('permission-denied') || message.includes('insufficient permissions')) {
+    return 'A conta Google entrou, mas o Firestore recusou o acesso. Verifique as regras de segurança do banco.';
+  }
+  if (code.includes('unauthenticated')) return 'Sua sessão Google expirou. Saia e entre novamente para sincronizar.';
+  if (isTemporaryConnectionError(error)) {
+    return 'Não foi possível alcançar o Firestore agora. Seu progresso continua salvo neste navegador; verifique a conexão e tente novamente.';
+  }
+  return error instanceof Error ? error.message : fallback;
+}
 
 function progressCollection(db: Firestore, uid: string) {
   return collection(db, 'users', uid, 'progress');
@@ -218,8 +248,56 @@ export async function startProgressSync(
   let initializing = false;
   let initialized = false;
   let timer: number | undefined;
+  let retryTimer: number | undefined;
+  let retryAttempt = 0;
   let remoteUnsubscribe: Unsubscribe | undefined;
   const delayedKeys = new Set<string>();
+
+  const clearRetry = () => {
+    if (retryTimer !== undefined) window.clearTimeout(retryTimer);
+    retryTimer = undefined;
+  };
+
+  const scheduleRetry = () => {
+    if (disposed || !navigator.onLine || retryTimer !== undefined) return;
+    const delay = Math.min(30_000, 1_500 * (2 ** Math.min(retryAttempt, 5)));
+    retryAttempt += 1;
+    retryTimer = window.setTimeout(() => {
+      retryTimer = undefined;
+      void recoverConnection();
+    }, delay);
+  };
+
+  const installRemoteListener = () => {
+    remoteUnsubscribe?.();
+    remoteUnsubscribe = onSnapshot(progressCollection(db, uid), (snapshot) => {
+      void (async () => {
+        let changed = false;
+        const pending = readPending(uid);
+        for (const change of snapshot.docChanges()) {
+          const key = String(change.doc.data().key ?? '');
+          if (!isProgressStorageKey(key) || pending[key]) continue;
+          const record = await readCloudRecord(db, uid, key);
+          if (!record) continue;
+          const currentValue = getStorage()?.getItem(key) ?? null;
+          if (currentValue === record.value) continue;
+          applyCloudValue(key, record.value);
+          changed = true;
+        }
+        if (changed) emitProgressUpdated();
+        if (Object.keys(readPending(uid)).length) void flush();
+        else onStatus('synced', 'Progresso sincronizado com esta conta Google.');
+      })().catch((error) => {
+        const temporary = isTemporaryConnectionError(error);
+        onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Falha ao receber progresso da nuvem.'));
+        if (temporary) scheduleRetry();
+      });
+    }, (error) => {
+      const temporary = isTemporaryConnectionError(error);
+      onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Falha ao acompanhar o progresso na nuvem.'));
+      if (temporary) scheduleRetry();
+    });
+  };
 
   const flush = async () => {
     if (!initialized || disposed) return;
@@ -237,9 +315,33 @@ export async function startProgressSync(
       }
       onStatus('synced', 'Progresso sincronizado com esta conta Google.');
     } catch (error) {
-      onStatus(navigator.onLine ? 'error' : 'offline', error instanceof Error ? error.message : 'Não foi possível sincronizar agora.');
+      const temporary = isTemporaryConnectionError(error);
+      onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Não foi possível sincronizar agora.'));
+      if (temporary) scheduleRetry();
     }
   };
+
+  async function recoverConnection() {
+    if (disposed) return;
+    if (!navigator.onLine) {
+      onStatus('offline', 'Sem internet · as alterações ficam pendentes neste dispositivo.');
+      return;
+    }
+    onStatus('syncing', 'Tentando restabelecer a conexão com a nuvem…');
+    try {
+      await enableNetwork(db);
+      retryAttempt = 0;
+      if (!initialized) await begin();
+      else {
+        installRemoteListener();
+        await flush();
+      }
+    } catch (error) {
+      const temporary = isTemporaryConnectionError(error);
+      onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Não foi possível retomar a sincronização.'));
+      if (temporary) scheduleRetry();
+    }
+  }
 
   const begin = async () => {
     if (initializing || initialized || disposed) return;
@@ -249,32 +351,17 @@ export async function startProgressSync(
       await synchronizeInitialState(db, uid);
       if (disposed) return;
       initialized = true;
-      remoteUnsubscribe = onSnapshot(progressCollection(db, uid), (snapshot) => {
-        void (async () => {
-          let changed = false;
-          const pending = readPending(uid);
-          for (const change of snapshot.docChanges()) {
-            const key = String(change.doc.data().key ?? '');
-            if (!isProgressStorageKey(key) || pending[key]) continue;
-            const record = await readCloudRecord(db, uid, key);
-            if (!record) continue;
-            const currentValue = getStorage()?.getItem(key) ?? null;
-            if (currentValue === record.value) continue;
-            applyCloudValue(key, record.value);
-            changed = true;
-          }
-          if (changed) emitProgressUpdated();
-          if (Object.keys(readPending(uid)).length) void flush();
-          else onStatus('synced', 'Progresso sincronizado com esta conta Google.');
-        })().catch((error) => onStatus('error', error instanceof Error ? error.message : 'Falha ao receber progresso da nuvem.'));
-      }, (error) => onStatus('error', error.message || 'Falha ao acompanhar o progresso na nuvem.'));
+      retryAttempt = 0;
+      installRemoteListener();
       await flush();
     } catch (error) {
       if (error instanceof LocalMigrationCancelledError) {
         onStatus('signed-out', 'A migração foi cancelada; o progresso local continua intacto.');
         throw error;
       }
-      onStatus(navigator.onLine ? 'error' : 'offline', error instanceof Error ? error.message : 'Não foi possível carregar o progresso da nuvem.');
+      const temporary = isTemporaryConnectionError(error);
+      onStatus(temporary ? 'offline' : 'error', readableSyncError(error, 'Não foi possível carregar o progresso da nuvem.'));
+      if (temporary) scheduleRetry();
     } finally { initializing = false; }
   };
 
@@ -287,13 +374,16 @@ export async function startProgressSync(
     window.clearTimeout(timer);
     timer = window.setTimeout(() => { void flush(); }, 450);
   };
-  const onOnline = () => { if (!initialized) void begin(); else void flush(); };
+  const onOnline = () => { clearRetry(); retryAttempt = 0; void recoverConnection(); };
+  const onManualRetry = () => { clearRetry(); retryAttempt = 0; void recoverConnection(); };
   window.addEventListener(SYNC_CHANGE_EVENT, onLocalChange);
   window.addEventListener('online', onOnline);
+  window.addEventListener(PROGRESS_SYNC_RETRY_EVENT, onManualRetry);
   try { await begin(); }
   catch (error) {
     window.removeEventListener(SYNC_CHANGE_EVENT, onLocalChange);
     window.removeEventListener('online', onOnline);
+    window.removeEventListener(PROGRESS_SYNC_RETRY_EVENT, onManualRetry);
     remoteUnsubscribe?.();
     throw error;
   }
@@ -301,8 +391,10 @@ export async function startProgressSync(
   return () => {
     disposed = true;
     window.clearTimeout(timer);
+    clearRetry();
     window.removeEventListener(SYNC_CHANGE_EVENT, onLocalChange);
     window.removeEventListener('online', onOnline);
+    window.removeEventListener(PROGRESS_SYNC_RETRY_EVENT, onManualRetry);
     remoteUnsubscribe?.();
   };
 }
